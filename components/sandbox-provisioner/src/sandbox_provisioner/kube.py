@@ -9,7 +9,7 @@ import httpx
 
 from sandbox_provisioner.models import SandboxInfo, SandboxSpec
 
-LABEL = "sif.io/managed"
+LABEL = "sis.io/managed"
 
 
 def pod_name(task_id: str) -> str:
@@ -21,8 +21,8 @@ def pod_manifest(spec: SandboxSpec, namespace: str, runtime_class: str = "gvisor
     return {
         "apiVersion": "v1", "kind": "Pod",
         "metadata": {"name": pod_name(spec.task_id), "namespace": namespace,
-                     "labels": {LABEL: "true", "sif.io/task": spec.task_id, "app.kubernetes.io/name": "sandbox"},
-                     "annotations": {"sif.io/created": str(int(now or time.time())), "sif.io/ttl": str(spec.ttl_seconds)}},
+                     "labels": {LABEL: "true", "sis.io/task": spec.task_id, "app.kubernetes.io/name": "sandbox"},
+                     "annotations": {"sis.io/created": str(int(now or time.time())), "sis.io/ttl": str(spec.ttl_seconds)}},
         "spec": {
             "runtimeClassName": runtime_class, "restartPolicy": "Never", "automountServiceAccountToken": False, "enableServiceLinks": False,
             "activeDeadlineSeconds": spec.ttl_seconds,
@@ -38,7 +38,7 @@ def pod_manifest(spec: SandboxSpec, namespace: str, runtime_class: str = "gvisor
 class KubeBackend:
     name = "kubernetes"
 
-    def __init__(self, client: httpx.AsyncClient | None = None, *, namespace: str = "sif-sandboxes", runtime_class: str = "gvisor") -> None:
+    def __init__(self, client: httpx.AsyncClient | None = None, *, namespace: str = "sis-sandboxes", runtime_class: str = "gvisor") -> None:
         if client is None:
             token = Path("/var/run/secrets/kubernetes.io/serviceaccount/token").read_text().strip()
             client = httpx.AsyncClient(base_url="https://kubernetes.default.svc", headers={"Authorization": f"Bearer {token}"},
@@ -55,7 +55,7 @@ class KubeBackend:
         if r.status_code >= 300:
             raise RuntimeError(f"kubernetes: create pod failed ({r.status_code}): {r.text[:300]}")  # Kyverno denials show up here
         return SandboxInfo(task_id=spec.task_id, name=manifest["metadata"]["name"], backend=self.name, status="pending",
-                           created_at=float(manifest["metadata"]["annotations"]["sif.io/created"]), ttl_seconds=spec.ttl_seconds)
+                           created_at=float(manifest["metadata"]["annotations"]["sis.io/created"]), ttl_seconds=spec.ttl_seconds)
 
     async def delete(self, task_id: str) -> bool:
         r = await self.client.delete(f"{self._pods}/{pod_name(task_id)}", params={"gracePeriodSeconds": "0"})
@@ -67,8 +67,8 @@ class KubeBackend:
     @staticmethod
     def _info(p: dict) -> SandboxInfo:
         m = p["metadata"]
-        return SandboxInfo(task_id=m.get("labels", {}).get("sif.io/task", ""), name=m["name"], backend="kubernetes", status=p.get("status", {}).get("phase", "Unknown").lower(),
-                           created_at=float(m.get("annotations", {}).get("sif.io/created", 0)), ttl_seconds=int(m.get("annotations", {}).get("sif.io/ttl", 0)))
+        return SandboxInfo(task_id=m.get("labels", {}).get("sis.io/task", ""), name=m["name"], backend="kubernetes", status=p.get("status", {}).get("phase", "Unknown").lower(),
+                           created_at=float(m.get("annotations", {}).get("sis.io/created", 0)), ttl_seconds=int(m.get("annotations", {}).get("sis.io/ttl", 0)))
 
     async def logs(self, task_id: str, tail: int) -> list[str] | None:
         """Needs `get` on pods/log in the sandbox namespace (the provisioner's role)."""

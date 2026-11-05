@@ -11,7 +11,7 @@ async function start(sourceId?: number) {
   if (typeof who === 'string') back('/context', { error: who })
   await fetch(`${INGEST}/v1/sync`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.SIF_INGEST_TOKEN ?? ''}`, 'x-sif-actor': who.email },
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.SIS_INGEST_TOKEN ?? ''}`, 'x-sis-actor': who.email },
     body: JSON.stringify(sourceId ? { source_id: sourceId } : {}),
   }).catch(() => undefined)
   revalidatePath('/context')

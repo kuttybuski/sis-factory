@@ -14,7 +14,7 @@ import re
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-log = logging.getLogger("sif.namespaces")
+log = logging.getLogger("sis.namespaces")
 
 DEFAULT = "default"
 _NAME = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$")
@@ -102,7 +102,7 @@ async def register(base: Any, namespace: str, retention_days: int = 30) -> bool:
             raise
     try:
         await svc.register_namespace(RegisterNamespaceRequest(
-            namespace=namespace, description="SIF team namespace", workflow_execution_retention_period=Duration(seconds=retention_days * 86400)))
+            namespace=namespace, description="SIS team namespace", workflow_execution_retention_period=Duration(seconds=retention_days * 86400)))
         log.info("registered Temporal namespace %s", namespace)
         return True
     except RPCError as e:

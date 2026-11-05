@@ -14,7 +14,7 @@ DASH = {"Authorization": "Bearer dash-token"}
 
 @pytest.fixture(scope="module")
 def client():
-    os.environ["SIF_INGEST_TOKEN"] = "test-token"
+    os.environ["SIS_INGEST_TOKEN"] = "test-token"
     from portal_api.main import app
 
     with TestClient(app) as c:
@@ -22,7 +22,7 @@ def client():
 
 
 def test_with_a_dashboard_token_services_cannot_make_peoples_decisions(client, monkeypatch):
-    monkeypatch.setenv("SIF_DASHBOARD_TOKEN", "dash-token")
+    monkeypatch.setenv("SIS_DASHBOARD_TOKEN", "dash-token")
     team = {"name": "Enterprise", "jira_projects": ["ENT"], "repos": ["acme/ent"]}
     assert client.put("/api/teams", json=team, headers=SERVICE).status_code == 403
     assert client.put("/api/teams", json=team, headers=DASH).status_code == 200
@@ -62,7 +62,7 @@ def test_intake_can_be_paused_for_one_team_or_all_and_reports_counts(client):
 
 
 def test_a_team_at_its_daily_limit_is_reported_as_held(client, monkeypatch):
-    monkeypatch.setenv("SIF_MAX_TASKS_PER_TEAM_PER_DAY", "1")
+    monkeypatch.setenv("SIS_MAX_TASKS_PER_TEAM_PER_DAY", "1")
     client.put("/api/teams", headers=SERVICE, json={"name": "Capped", "jira_projects": ["CAP"], "repos": ["acme/cap"]})
     client.post("/api/events", headers=SERVICE, json={"type": "task.discovered", "taskId": "CAP-1", "ts": int(time.time() * 1000), "jiraKey": "CAP-1", "team": "Capped"})
     body = client.get("/api/intake").json()
@@ -121,13 +121,13 @@ def test_rotating_the_secret_key_keeps_saved_secrets_readable_and_moves_them(cli
     from portal_api.main import app
 
     old, new = Fernet.generate_key().decode(), Fernet.generate_key().decode()
-    monkeypatch.setenv("SIF_SECRET_KEY", old)
+    monkeypatch.setenv("SIS_SECRET_KEY", old)
     client.put("/api/teams", headers=SERVICE, json={"name": "Enterprise", "jira_projects": ["ENT"]})
     asyncio.run(db.put_connection(app.state.pool, team="Enterprise", provider="github", config={}, secret=vault.encrypt("ghp_rotate_me"), hint="x", by="t"))
-    monkeypatch.setenv("SIF_SECRET_KEY", new)
-    monkeypatch.setenv("SIF_SECRET_KEYS_OLD", old)
+    monkeypatch.setenv("SIS_SECRET_KEY", new)
+    monkeypatch.setenv("SIS_SECRET_KEYS_OLD", old)
     assert asyncio.run(vault.reencrypt(app.state.pool)) >= 1
-    monkeypatch.delenv("SIF_SECRET_KEYS_OLD")
+    monkeypatch.delenv("SIS_SECRET_KEYS_OLD")
     row = asyncio.run(db.get_connection_secret(app.state.pool, "Enterprise", "github"))
     assert vault.decrypt(row["secret"]) == "ghp_rotate_me"  # readable with the new key alone
     assert asyncio.run(vault.reencrypt(app.state.pool)) == 0

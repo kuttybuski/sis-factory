@@ -5,8 +5,8 @@ from temporalio.common import WorkflowIDConflictPolicy, WorkflowIDReusePolicy
 from temporalio.exceptions import WorkflowAlreadyStartedError
 from temporalio.service import RPCError
 
-from sif_contracts.namespaces import DEFAULT, Namespaces
-from sif_contracts.workflow import ORCHESTRATOR_QUEUE, WORKFLOW, TaskInput, workflow_id
+from sis_contracts.namespaces import DEFAULT, Namespaces
+from sis_contracts.workflow import ORCHESTRATOR_QUEUE, WORKFLOW, TaskInput, workflow_id
 
 
 class TemporalFlow:

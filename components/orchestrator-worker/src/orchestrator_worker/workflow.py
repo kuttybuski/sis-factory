@@ -1,6 +1,6 @@
 """TaskWorkflow: one Jira ticket from pickup to its outcome.
 
-What happens between pickup and the outcome follows the handling policy in the input (see sif_contracts.handling): a plain story or task goes
+What happens between pickup and the outcome follows the handling policy in the input (see sis_contracts.handling): a plain story or task goes
 straight to a developer agent and a draft pull request; an epic or feature is split into child issues; a story can first get an intent.md and an
 architect's design.md, each optionally approved by a person on Jira. Every agent runs in its own sandbox, one after the other.
 
@@ -18,10 +18,10 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
-    from sif_contracts import handling as H
-    from sif_contracts.policy import Decision, classify_reply
-    from sif_contracts import replay
-    from sif_contracts.workflow import (EVAL_WORKFLOW, JIRA_QUEUE, ORCHESTRATOR_QUEUE, Q_ANSWER, Q_LOGS, Q_STATE, REPLAY_WORKFLOW, REVIEW_WORKFLOW, SIG_COST, SIG_DONE,
+    from sis_contracts import handling as H
+    from sis_contracts.policy import Decision, classify_reply
+    from sis_contracts import replay
+    from sis_contracts.workflow import (EVAL_WORKFLOW, JIRA_QUEUE, ORCHESTRATOR_QUEUE, Q_ANSWER, Q_LOGS, Q_STATE, REPLAY_WORKFLOW, REVIEW_WORKFLOW, SIG_COST, SIG_DONE,
                                         SIG_FAILED, SIG_KILL, SIG_LOG, SIG_QUESTION, SIG_REPLY, AgentResult, Answer, EvalCase, EvalInput, Feedback, Question,
                                         ReplayInput, Reply, ReviewInput, TaskInput)
     from orchestrator_worker.classify import slug
@@ -175,10 +175,10 @@ class TaskWorkflow:
     async def fail(self, inp: TaskInput, why: str) -> str:
         """Ends the task as failed, saying why the same way on Jira (after the mention) and on the dashboard and 3D view."""
         await self.emit(inp, "task.failed", text=(why[:1].upper() + why[1:])[:1000])
-        await self.jira(inp, f"{inp.mention} {why}", remove=["sif-picked"])
+        await self.jira(inp, f"{inp.mention} {why}", remove=["sis-picked"])
         return "failed"
 
-    async def stopped(self, inp: TaskInput, by: str = "", labels: tuple[str, ...] = ("sif-picked",)) -> str:
+    async def stopped(self, inp: TaskInput, by: str = "", labels: tuple[str, ...] = ("sis-picked",)) -> str:
         """Ends the task because a person stopped it: a kill from the dashboard (killed_by) or a `stop` reply on Jira (by)."""
         await self.emit(inp, "task.killed", actor=self.killed_by or by or None)
         why = f"stopped: the run was cancelled by {self.killed_by}." if self.killed_by else "stopped as requested."
@@ -224,7 +224,7 @@ class TaskWorkflow:
             await self.emit(inp, "classify.result", classifier="ticket-quality", result="blocked")
             await self.emit(inp, "jira.bounced", text="The ticket text looks like an attempt to give the agent new instructions.")
             await self.jira(inp, f"{mention} did not start: the ticket text looks like an attempt to instruct the agent ({', '.join(scan['rules'][:3])}). A person should review it.",
-                            add=["sif-blocked"], remove=["sif-picked"])
+                            add=["sis-blocked"], remove=["sis-picked"])
             return "bounced"
         ok, missing = await self.act("classify_quality", inp.title, inp.description, inp.kind)
         await self.emit(inp, "classify.result", classifier="ticket-quality", result="ok" if ok else "insufficient")
@@ -270,25 +270,25 @@ class TaskWorkflow:
         question = "Before I start, please tell me " + " and ".join(missing) + "."
         waited_since = len(self.replies)
         await self.emit(inp, "agent.asked_question", text=question, reason="question", deadline=self.ts() + inp.wait_timeout_seconds * 1000)
-        await self.jira(inp, f"{m} {question}\n\nReply `{m} <the details>` and I will start, or `{m} stop`.", add=["sif-needs-info"])
+        await self.jira(inp, f"{m} {question}\n\nReply `{m} <the details>` and I will start, or `{m} stop`.", add=["sis-needs-info"])
         self.stage = "waiting_for_human"
         try:
             await workflow.wait_condition(lambda: len(self.replies) > waited_since or bool(self.killed_by), timeout=timedelta(seconds=inp.wait_timeout_seconds))
         except TimeoutError:
             await self.emit(inp, "jira.bounced", text="Ticket needs more detail: " + "; ".join(missing))
             await self.jira(inp, f"{m} did not start: no reply arrived. Add " + " and ".join(missing) + " to the description, then add the label again.",
-                            add=["sif-needs-info"], remove=["sif-picked"])
+                            add=["sis-needs-info"], remove=["sis-picked"])
             return "bounced"
         reply = None if self.killed_by else self.replies[waited_since]
         if reply is None or classify_reply(reply.text) is Decision.STOP:
-            return await self.stopped(inp, reply.author if reply else "", ("sif-picked", "sif-needs-info"))
+            return await self.stopped(inp, reply.author if reply else "", ("sis-picked", "sis-needs-info"))
         scan = await self.screen(inp, reply.text, "jira_ticket", reply.author)  # the answer becomes part of the ticket, so it is screened the same way
         if scan["verdict"] == "block":
             await self.emit(inp, "jira.bounced", text="The reply looks like an attempt to give the agent new instructions.")
-            await self.jira(inp, f"{m} did not start: the reply looks like an attempt to instruct the agent. A person should review it.", add=["sif-blocked"], remove=["sif-picked"])
+            await self.jira(inp, f"{m} did not start: the reply looks like an attempt to instruct the agent. A person should review it.", add=["sis-blocked"], remove=["sis-picked"])
             return "bounced"
         await self.emit(inp, "agent.answered", text=f"{m} {reply.text}", actor=reply.author)
-        await self.jira(inp, "", remove=["sif-needs-info"])
+        await self.jira(inp, "", remove=["sis-needs-info"])
         self.stage = "classifying"
         return dataclasses.replace(inp, description=f"{inp.description}\n\nClarification from {reply.author or 'the reporter'}:\n{reply.text}")
 
@@ -386,7 +386,7 @@ class TaskWorkflow:
             self.children.append(key)
         await self.emit(inp, "children.created", text=", ".join(self.children))
         await self.jira(inp, f"{inp.mention} created {len(self.children)} {policy.split_into} issues from this one: {', '.join(self.children)}. They are picked up on the next poll.",
-                        add=["sif-split"], remove=["sif-picked"])
+                        add=["sis-split"], remove=["sis-picked"])
         return "split"
 
     @staticmethod
@@ -408,7 +408,7 @@ class TaskWorkflow:
                 await workflow.wait_condition(lambda: len(self.replies) > waited_since or bool(self.killed_by), timeout=timedelta(seconds=inp.wait_timeout_seconds))
             except TimeoutError:
                 await self.emit(inp, "wait.timed_out", text=f"No one reviewed {label} within {inp.wait_timeout_seconds // 60} minutes.")
-                await self.jira(inp, f"{m} stopped waiting after {inp.wait_timeout_seconds // 60} minutes. Add the label again to restart.", add=["sif-timed-out"], remove=["sif-picked"])
+                await self.jira(inp, f"{m} stopped waiting after {inp.wait_timeout_seconds // 60} minutes. Add the label again to restart.", add=["sis-timed-out"], remove=["sis-picked"])
                 return "timed_out", ""
             if self.killed_by:
                 return await self.stopped(inp), ""
@@ -467,7 +467,7 @@ class TaskWorkflow:
             except TimeoutError:
                 self.answers[q.id] = Answer(status="timed_out", text="No reply arrived in time; the sandbox was stopped.")
                 await self.emit(inp, "wait.timed_out", text=f"No reply within {inp.wait_timeout_seconds // 60} minutes.")
-                await self.jira(inp, f"{inp.mention} stopped waiting after {inp.wait_timeout_seconds // 60} minutes and shut the sandbox down. Add the label again to restart.", add=["sif-timed-out"], remove=["sif-picked"])
+                await self.jira(inp, f"{inp.mention} stopped waiting after {inp.wait_timeout_seconds // 60} minutes and shut the sandbox down. Add the label again to restart.", add=["sis-timed-out"], remove=["sis-picked"])
                 return "timed_out"
             if self.killed_by or self.failed:
                 self.answers[q.id] = Answer(status="stopped", text="The run was ended.")
@@ -496,15 +496,15 @@ class TaskWorkflow:
         self.stage = "running"
         if self.answers[q.id].status == "stopped":
             await self.emit(inp, "task.killed")
-            await self.jira(inp, f"{inp.mention} stopped as requested.", remove=["sif-picked"])
+            await self.jira(inp, f"{inp.mention} stopped as requested.", remove=["sis-picked"])
             return "killed"
         return None
 
     async def publish(self, inp: TaskInput, commit: str, r: AgentResult, profile: str = "", risk: str = "") -> str:
         self.stage = "publishing"
-        branch = f"sif/{inp.jira_key}-{slug(inp.title)}"
-        docs = f"\n\nDocuments written for this change: {', '.join(self.docs)} (under docs/sif/{inp.jira_key}/)." if self.docs else ""
-        footer = f"{docs}\n\n---\nOpened by sif for {inp.jira_key}. This is a draft: a person must review and merge it."
+        branch = f"sis/{inp.jira_key}-{slug(inp.title)}"
+        docs = f"\n\nDocuments written for this change: {', '.join(self.docs)} (under docs/sis/{inp.jira_key}/)." if self.docs else ""
+        footer = f"{docs}\n\n---\nOpened by sis for {inp.jira_key}. This is a draft: a person must review and merge it."
         if risk == "high":  # triage saw auth, payments, migrations, deletes or production in the ticket
             footer = f"\n\n> **High-risk change** (security, money, data or production per triage): review with extra care.{footer}"
         await self.emit(inp, "publish.started", text=branch)
@@ -547,7 +547,7 @@ class ReviewWorkflow(TaskWorkflow):
                 why = f"was asked to stop by {self.killed_by}" if self.killed_by else f"stopped watching {r.pr_url} after {inp.review_watch_seconds // 86400} days without a decision"
                 await self.emit(inp, "review.stopped", prUrl=r.pr_url, actor=self.killed_by or None,
                                 text=f"Stopped by {self.killed_by}." if self.killed_by else f"No decision on the PR within {inp.review_watch_seconds // 86400} days.")
-                await self.jira(inp, f"{m} {why}. The pull request stays open for a person to finish.", remove=["sif-picked"])
+                await self.jira(inp, f"{m} {why}. The pull request stays open for a person to finish.", remove=["sis-picked"])
                 return "pr_opened"
             try:
                 st = await self.act("pr_status", inp.repo, r.pr_number, inp.team, m)
@@ -566,7 +566,7 @@ class ReviewWorkflow(TaskWorkflow):
                     except ActivityError as e:
                         workflow.logger.warning("could not keep %s as a replay case: %s", inp.jira_key, e.cause)
                 text = f"{m} {r.pr_url} was merged. Done." if st["state"] == "merged" else f"{m} {r.pr_url} was closed without merging."
-                await self.jira(inp, text, add=[f"sif-{st['state']}"], remove=["sif-picked"])
+                await self.jira(inp, text, add=[f"sis-{st['state']}"], remove=["sis-picked"])
                 return st["state"]
 
             new = [Feedback(id=f["id"], author=f["author"], body=f["body"], kind=f["kind"], path=f.get("path", "")) for f in st["feedback"] if f["id"] not in seen]

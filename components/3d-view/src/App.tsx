@@ -149,7 +149,7 @@ export default function App() {
   return (
     <>
       <header className="topbar">
-        <a className="brand" href={DASHBOARD_URL}>SIF <span>Factory</span></a>
+        <a className="brand" href={DASHBOARD_URL}>SIS <span>Factory</span></a>
         <span className="crumb">3D view{TEAM && !demo ? ` · ${TEAM}` : ''}</span>
         {env && <span className={`env ${env}`} title="The environment this view shows">{env === 'demo' ? 'Demo: simulated data' : env}</span>}
         <span className="spacer" />
@@ -164,7 +164,7 @@ export default function App() {
         )}
         {who?.user && (who.user.sso
           ? <span className="who"><b>{who.user.email}</b> · {who.user.role}</span>
-          : <span className="who local" title="Set SIF_AUTH_MODE=proxy behind oauth2-proxy to require sign-in">No login (local)</span>)}
+          : <span className="who local" title="Set SIS_AUTH_MODE=proxy behind oauth2-proxy to require sign-in">No login (local)</span>)}
         <a className="ext" href={DASHBOARD_URL}>Dashboard</a>
       </header>
 

@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from sif_contracts.events import EventType, FactoryEvent
+from sis_contracts.events import EventType, FactoryEvent
 
 SHARED = Path(__file__).resolve().parents[2] / "libs" / "contracts" / "event_types.json"
 

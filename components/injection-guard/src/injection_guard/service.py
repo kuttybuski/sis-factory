@@ -11,7 +11,7 @@ from injection_guard.scanner import MAX_CHARS, scan
 from injection_guard.spotlight import SYSTEM_GUIDANCE, wrap_untrusted
 
 log = logging.getLogger("injection_guard")
-app = FastAPI(title="sif injection-guard")
+app = FastAPI(title="sis injection-guard")
 
 
 class ScanRequest(BaseModel):

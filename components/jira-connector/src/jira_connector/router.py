@@ -9,7 +9,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from sif_contracts.connections import ConnectionsUnavailable, Credentials, JiraCreds
+from sis_contracts.connections import ConnectionsUnavailable, Credentials, JiraCreds
 
 from jira_connector.client import JiraClient
 

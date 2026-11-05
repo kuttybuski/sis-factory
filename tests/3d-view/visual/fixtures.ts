@@ -6,7 +6,7 @@ const ev = (type: string, taskId: string, ago: number, extra: Record<string, unk
 const EVENTS = [
   ev('task.discovered', 'PAY-1', 400_000, { jiraKey: 'PAY-1', title: 'Retry billing with backoff', team: 'Payments', repo: 'acme/billing' }),
   ev('repo.checked_out', 'PAY-1', 390_000), ev('context.started', 'PAY-1', 385_000), ev('sandbox.created', 'PAY-1', 380_000), ev('agent.running', 'PAY-1', 370_000),
-  ev('agent.asked_question', 'PAY-1', 180_000, { reason: 'question', text: '@sif Which delay should the first retry use?', deadline: NOW + 4_140_000 }),
+  ev('agent.asked_question', 'PAY-1', 180_000, { reason: 'question', text: '@sis Which delay should the first retry use?', deadline: NOW + 4_140_000 }),
   ev('task.discovered', 'MOB-2', 60_000, { jiraKey: 'MOB-2', title: 'Dark mode toggle', team: 'Mobile', repo: 'acme/app' }),
   ev('repo.checked_out', 'MOB-2', 50_000), ev('sandbox.created', 'MOB-2', 40_000), ev('agent.running', 'MOB-2', 30_000),
   ev('task.discovered', 'PAY-3', 900_000, { jiraKey: 'PAY-3', title: 'Fix rounding in invoices', team: 'Payments', repo: 'acme/billing' }),

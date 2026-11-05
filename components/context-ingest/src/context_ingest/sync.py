@@ -8,11 +8,11 @@ from typing import Any
 
 import httpx
 
-from sif_context import confluence, db, github
-from sif_contracts.connections import Credentials
-from sif_context.embed import Embedder
-from sif_context.learn import mine_review_lessons, qa_pairs_from_events, review_notes
-from sif_context.qa import qa_to_doc
+from sis_context import confluence, db, github
+from sis_contracts.connections import Credentials
+from sis_context.embed import Embedder
+from sis_context.learn import mine_review_lessons, qa_pairs_from_events, review_notes
+from sis_context.qa import qa_to_doc
 
 log = logging.getLogger("context_ingest")
 QA_EVENTS = ("agent.asked_question", "agent.answered", "wait.timed_out", "task.killed", "task.failed")
@@ -30,12 +30,12 @@ class Config:
     github_token: str = field(default_factory=lambda: os.environ.get("GITHUB_TOKEN", ""))
     github_api_url: str = github.API
     credentials: Credentials | None = field(default=None, repr=False)  # where a team's own Jira and GitHub connections come from; None = shared credentials only
-    pr_history: int = field(default_factory=lambda: int(os.environ.get("SIF_PR_HISTORY_COUNT", "100")))
-    review_min_count: int = field(default_factory=lambda: int(os.environ.get("SIF_REVIEW_MIN_COUNT", "2")))
+    pr_history: int = field(default_factory=lambda: int(os.environ.get("SIS_PR_HISTORY_COUNT", "100")))
+    review_min_count: int = field(default_factory=lambda: int(os.environ.get("SIS_REVIEW_MIN_COUNT", "2")))
     trusted_associations: tuple[str, ...] = field(default_factory=lambda: tuple(
-        a.strip().upper() for a in os.environ.get("SIF_TRUSTED_ASSOCIATIONS", "OWNER,MEMBER,COLLABORATOR").split(",") if a.strip()))
+        a.strip().upper() for a in os.environ.get("SIS_TRUSTED_ASSOCIATIONS", "OWNER,MEMBER,COLLABORATOR").split(",") if a.strip()))
     portal_url: str = field(default_factory=lambda: os.environ.get("PORTAL_API_URL", "http://portal-api:8000"))
-    ingest_token: str = field(default_factory=lambda: os.environ.get("SIF_INGEST_TOKEN", ""))
+    ingest_token: str = field(default_factory=lambda: os.environ.get("SIS_INGEST_TOKEN", ""))
 
 
 async def reconcile(pool, teams: list[dict[str, Any]]) -> dict[str, int]:
@@ -77,7 +77,7 @@ async def _qa_docs(pool):
 async def propose_lessons(cfg: Config, repo: str, prs: list) -> int:
     """Recurring reviewer feedback becomes candidate lessons. portal-api always queues these for human review."""
     if not cfg.ingest_token:
-        log.info("SIF_INGEST_TOKEN not set; skipping lesson proposals")
+        log.info("SIS_INGEST_TOKEN not set; skipping lesson proposals")
         return 0
     sent = 0
     async with httpx.AsyncClient(base_url=cfg.portal_url, headers={"Authorization": f"Bearer {cfg.ingest_token}"}, timeout=15) as c:
@@ -110,7 +110,7 @@ async def run_source(pool, source: dict[str, Any], embedder: Embedder, cfg: Conf
         if not (cfg.confluence_url and cfg.confluence_email and cfg.confluence_token):
             raise ConfigError("Confluence is not configured: set CONFLUENCE_BASE_URL (or JIRA_BASE_URL), and the matching email and API token.")
         async with confluence.client(cfg.confluence_url, cfg.confluence_email, cfg.confluence_token) as c:
-            return await db.sync_docs(pool, source["id"], confluence.fetch_space(c, key, source["team"], skip_restricted=os.environ.get("SIF_CONFLUENCE_RESTRICTED", "skip") != "index"), embedder)
+            return await db.sync_docs(pool, source["id"], confluence.fetch_space(c, key, source["team"], skip_restricted=os.environ.get("SIS_CONFLUENCE_RESTRICTED", "skip") != "index"), embedder)
     if kind in ("github_prs", "repo_docs"):
         if not cfg.github_token:
             raise ConfigError("GitHub is not configured: set GITHUB_TOKEN (read access to the repository).")

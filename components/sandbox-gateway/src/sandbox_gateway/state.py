@@ -44,7 +44,7 @@ class Registry:
     def register(self, rec: TaskRec) -> str:
         if rec.task_id in self.by_id:
             self.remove(rec.task_id)
-        token = "sif_" + secrets.token_hex(24)
+        token = "sis_" + secrets.token_hex(24)
         self.by_hash[hash_token(token)] = rec
         self.by_id[rec.task_id] = (hash_token(token), rec)
         return token

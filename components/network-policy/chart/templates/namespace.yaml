@@ -4,4 +4,4 @@ metadata:
   name: {{ .Values.sandboxNamespace }}
   labels:
     pod-security.kubernetes.io/enforce: restricted
-    sif.io/role: sandbox
+    sis.io/role: sandbox

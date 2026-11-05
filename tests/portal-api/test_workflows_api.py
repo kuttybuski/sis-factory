@@ -28,7 +28,7 @@ def event(n: int, kind: str, **attributes) -> HistoryEvent:
 
 
 HISTORY = [
-    event(1, "WORKFLOW_EXECUTION_STARTED", workflow_execution_started_event_attributes=dict(workflow_type={"name": "TaskWorkflow"}, task_queue={"name": "sif-orchestrator"})),
+    event(1, "WORKFLOW_EXECUTION_STARTED", workflow_execution_started_event_attributes=dict(workflow_type={"name": "TaskWorkflow"}, task_queue={"name": "sis-orchestrator"})),
     event(2, "WORKFLOW_TASK_SCHEDULED"), event(3, "WORKFLOW_TASK_STARTED"), event(4, "WORKFLOW_TASK_COMPLETED"),
     event(5, "ACTIVITY_TASK_SCHEDULED", activity_task_scheduled_event_attributes=dict(activity_type={"name": "checkout"})),
     event(6, "ACTIVITY_TASK_STARTED", activity_task_started_event_attributes=dict(scheduled_event_id=5, attempt=2)),
@@ -52,7 +52,7 @@ def test_timeline_folds_each_activity_and_timer_into_one_step_and_skips_bookkeep
     assert checkout["attempt"] == 2 and checkout["at"].startswith("2023-11-14") and checkout["ended"]
     assert wait["detail"].startswith("ended early")
     assert agent["detail"] == "activity error ← the agent exited with an error"  # the cause is where the real reason is
-    assert steps[0]["detail"] == "TaskWorkflow on queue sif-orchestrator"
+    assert steps[0]["detail"] == "TaskWorkflow on queue sis-orchestrator"
 
 
 def test_timeline_leaves_out_progress_reports_unless_they_failed():
@@ -114,7 +114,7 @@ class Handle:
 
 
 def execution(workflow_id, status=WorkflowExecutionStatus.FAILED):
-    return SimpleNamespace(id=workflow_id, run_id="r1", workflow_type="TaskWorkflow", status=status, task_queue="sif-orchestrator", history_length=13,
+    return SimpleNamespace(id=workflow_id, run_id="r1", workflow_type="TaskWorkflow", status=status, task_queue="sis-orchestrator", history_length=13,
                            start_time=datetime(2026, 11, 1, 10, tzinfo=UTC), close_time=datetime(2026, 11, 1, 10, 5, tzinfo=UTC))
 
 
@@ -135,7 +135,7 @@ class FakeTemporal:
 
 @pytest.fixture(scope="module")
 def client():
-    os.environ["SIF_INGEST_TOKEN"] = "test-token"
+    os.environ["SIS_INGEST_TOKEN"] = "test-token"
     from portal_api.main import app
 
     with TestClient(app) as c:
@@ -157,7 +157,7 @@ def test_list_passes_filters_and_paging_through(client, temporal):
     body = r.json()
     assert body["next"] == "0102" and body["workflows"][0] | {"started": None} == {
         "id": "task-SCRUM-16", "run_id": "r1", "type": "TaskWorkflow", "status": "running", "started": None,
-        "closed": "2026-11-01T10:05:00+00:00", "task_queue": "sif-orchestrator", "events": 13}
+        "closed": "2026-11-01T10:05:00+00:00", "task_queue": "sis-orchestrator", "events": 13}
     assert temporal.listed == [('ExecutionStatus = "Running" AND (WorkflowId STARTS_WITH "SCRUM" OR WorkflowId STARTS_WITH "task-SCRUM")', b"\x0a\x0b")]
 
 

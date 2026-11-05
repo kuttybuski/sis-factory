@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
-from sif_context.models import Chunk, approx_tokens
+from sis_context.models import Chunk, approx_tokens
 
 HEADINGS = {f"h{i}": i for i in range(1, 7)}
 _BLOCKS = {*HEADINGS, "p", "li", "pre", "tr", "blockquote", "ac:plain-text-body"}

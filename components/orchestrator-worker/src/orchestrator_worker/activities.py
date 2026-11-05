@@ -9,8 +9,8 @@ from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
 from injection_guard import fingerprint, scan, wrap_untrusted
-from sif_contracts import Settings
-from sif_contracts.workflow import TaskInput
+from sis_contracts import Settings
+from sis_contracts.workflow import TaskInput
 
 from orchestrator_worker import classify
 
@@ -24,7 +24,7 @@ class Deps:
     context: httpx.AsyncClient
     settings: Settings
     sandbox_gateway_url: str = "http://sandbox-gateway:8080"  # as the sandbox sees it
-    sandbox_image: str = "localhost/sif-agent-runner:latest"
+    sandbox_image: str = "localhost/sis-agent-runner:latest"
     agent: str = "scripted"
 
 
@@ -46,13 +46,13 @@ def internal_clients(env: dict[str, str] | None = None) -> Deps:
     e = os.environ if env is None else env
     auth = lambda t: {"Authorization": f"Bearer {t}"}  # noqa: E731
     return Deps(
-        portal=httpx.AsyncClient(base_url=e.get("PORTAL_API_URL", "http://portal-api:8000"), headers=auth(e.get("SIF_INGEST_TOKEN", "")), timeout=15),
-        gateway=httpx.AsyncClient(base_url=e.get("SANDBOX_GATEWAY_URL", "http://sandbox-gateway:8080"), headers=auth(e.get("SIF_INTERNAL_TOKEN", "")), timeout=30),
-        provisioner=httpx.AsyncClient(base_url=e.get("SANDBOX_PROVISIONER_URL", "http://sandbox-provisioner:8080"), headers=auth(e.get("SIF_INTERNAL_TOKEN", "")), timeout=120),
-        broker=httpx.AsyncClient(base_url=e.get("GIT_BROKER_URL", "http://git-broker:8080"), headers=auth(e.get("SIF_INTERNAL_TOKEN", "")), timeout=300),
+        portal=httpx.AsyncClient(base_url=e.get("PORTAL_API_URL", "http://portal-api:8000"), headers=auth(e.get("SIS_INGEST_TOKEN", "")), timeout=15),
+        gateway=httpx.AsyncClient(base_url=e.get("SANDBOX_GATEWAY_URL", "http://sandbox-gateway:8080"), headers=auth(e.get("SIS_INTERNAL_TOKEN", "")), timeout=30),
+        provisioner=httpx.AsyncClient(base_url=e.get("SANDBOX_PROVISIONER_URL", "http://sandbox-provisioner:8080"), headers=auth(e.get("SIS_INTERNAL_TOKEN", "")), timeout=120),
+        broker=httpx.AsyncClient(base_url=e.get("GIT_BROKER_URL", "http://git-broker:8080"), headers=auth(e.get("SIS_INTERNAL_TOKEN", "")), timeout=300),
         context=httpx.AsyncClient(base_url=e.get("CONTEXT_API_URL", "http://context-api:8080"), timeout=60),
         settings=Settings(), sandbox_gateway_url=e.get("SANDBOX_URL_FOR_AGENT", "http://sandbox-gateway:8080"),
-        sandbox_image=e.get("SIF_SANDBOX_IMAGE", "localhost/sif-agent-runner:latest"), agent=e.get("SIF_AGENT", "scripted"))
+        sandbox_image=e.get("SIS_SANDBOX_IMAGE", "localhost/sis-agent-runner:latest"), agent=e.get("SIS_AGENT", "scripted"))
 
 
 def _raise_for(r: httpx.Response, what: str) -> None:
@@ -110,7 +110,7 @@ async def classify_risk(title: str, description: str) -> str:
 
 @activity.defn(name="classify_route")
 async def classify_route(risk: str) -> str:
-    return os.environ.get("SIF_PROFILE", "cheap-best")  # one profile for now; routing by risk comes with more models
+    return os.environ.get("SIS_PROFILE", "cheap-best")  # one profile for now; routing by risk comes with more models
 
 
 @activity.defn(name="checkout_repo")
@@ -150,8 +150,8 @@ async def start_sandbox(inp: TaskInput, commit: str, context_md: str, budget: fl
     token = reg.json()["token"]
     created = await d.provisioner.post("/v1/sandboxes", json={
         "task_id": inp.jira_key, "image": d.sandbox_image, "ttl_seconds": inp.max_run_seconds + 600,
-        "env": {"SIF_GATEWAY_URL": d.sandbox_gateway_url, "SIF_TASK_TOKEN": token, "SIF_AGENT": d.agent, "SIF_PROFILE": profile,
-                "SIF_MODEL_IMPLEMENTATION": d.settings.model_implementation}})
+        "env": {"SIS_GATEWAY_URL": d.sandbox_gateway_url, "SIS_TASK_TOKEN": token, "SIS_AGENT": d.agent, "SIS_PROFILE": profile,
+                "SIS_MODEL_IMPLEMENTATION": d.settings.model_implementation}})
     if created.status_code >= 300:
         await d.gateway.delete(f"/internal/tasks/{inp.jira_key}")  # do not leave a live token behind a sandbox that never started
         _raise_for(created, "sandbox-provisioner")

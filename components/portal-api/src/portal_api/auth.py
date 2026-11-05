@@ -2,11 +2,11 @@
 through the user's browser) can change anything.
 
 Two write tokens, so a compromised service cannot make a person's decisions:
-- SIF_DASHBOARD_TOKEN is held by the dashboard server only. Decisions people make (approving lessons, editing teams, team knowledge,
+- SIS_DASHBOARD_TOKEN is held by the dashboard server only. Decisions people make (approving lessons, editing teams, team knowledge,
   handling, connections, killing tasks, pausing intake) need it.
-- SIF_INGEST_TOKEN is held by the services. It reports events, proposes lessons, claims replay runs and knowledge PRs. It also works
-  on the dashboard routes until SIF_DASHBOARD_TOKEN is set (local development); in production it never does (sif_contracts.posture).
-Only services that need a team's decrypted credentials hold SIF_INTERNAL_TOKEN."""
+- SIS_INGEST_TOKEN is held by the services. It reports events, proposes lessons, claims replay runs and knowledge PRs. It also works
+  on the dashboard routes until SIS_DASHBOARD_TOKEN is set (local development); in production it never does (sis_contracts.posture).
+Only services that need a team's decrypted credentials hold SIS_INTERNAL_TOKEN."""
 
 import os
 import secrets
@@ -34,14 +34,14 @@ def _token_guard(*env_names: str):
 
 def dashboard_guard(authorization: str | None = Header(default=None)) -> None:
     """A decision by a person, through the dashboard."""
-    if not os.environ.get("SIF_DASHBOARD_TOKEN", ""):
-        return _token_guard("SIF_INGEST_TOKEN")(authorization)
-    if _matches(authorization, "SIF_DASHBOARD_TOKEN"):
+    if not os.environ.get("SIS_DASHBOARD_TOKEN", ""):
+        return _token_guard("SIS_INGEST_TOKEN")(authorization)
+    if _matches(authorization, "SIS_DASHBOARD_TOKEN"):
         return None
-    if _matches(authorization, "SIF_INGEST_TOKEN"):
+    if _matches(authorization, "SIS_INGEST_TOKEN"):
         raise HTTPException(403, "only the dashboard may do this")
     raise HTTPException(401, "invalid token")
 
 
-write_guard = _token_guard("SIF_INGEST_TOKEN", "SIF_DASHBOARD_TOKEN")  # services and the dashboard
-internal_guard = _token_guard("SIF_INTERNAL_TOKEN")
+write_guard = _token_guard("SIS_INGEST_TOKEN", "SIS_DASHBOARD_TOKEN")  # services and the dashboard
+internal_guard = _token_guard("SIS_INTERNAL_TOKEN")

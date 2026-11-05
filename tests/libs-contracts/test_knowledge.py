@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from sif_contracts.knowledge import entries, for_task, lines, mentioned, stale, text_error
+from sis_contracts.knowledge import entries, for_task, lines, mentioned, stale, text_error
 
 PAGE = {
     "rules": "- Never log card numbers or CVV.\n- Migrations must be backward compatible.",

@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
-from sif_contracts.workflow import Q_LOGS, WORKFLOW
+from sis_contracts.workflow import Q_LOGS, WORKFLOW
 
 from portal_api import db
 from portal_api.auth import pool

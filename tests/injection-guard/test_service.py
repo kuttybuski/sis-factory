@@ -25,7 +25,7 @@ def test_oversized_input_is_rejected():
 
 
 def test_check_output_uses_allowed_hosts_and_canaries():
-    r = client.post("/v1/check-output", json={"text": "![x](https://evil.example/a.png) SIFCANARY-1234", "allowed_hosts": ["github.com"], "canaries": ["SIFCANARY-1234"]}).json()
+    r = client.post("/v1/check-output", json={"text": "![x](https://evil.example/a.png) SISCANARY-1234", "allowed_hosts": ["github.com"], "canaries": ["SISCANARY-1234"]}).json()
     assert r["ok"] is False and {f["rule_id"] for f in r["findings"]} >= {"image-beacon", "canary-leak"}
 
 

@@ -12,7 +12,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 
 REMOTES = Path(os.environ.get("MOCK_REMOTES", "/remotes"))
-BOT = {"accountId": "bot-account", "displayName": "sif", "emailAddress": "bot@example.com"}
+BOT = {"accountId": "bot-account", "displayName": "sis", "emailAddress": "bot@example.com"}
 app = FastAPI()
 issues: dict[str, dict] = {}
 pulls: list[dict] = []
@@ -237,7 +237,7 @@ async def messages(request: Request):
 @app.post("/mock/issues")
 async def create_issue(request: Request):
     b = await request.json()
-    issues[b["key"]] = {"summary": b["summary"], "description": b["description"], "labels": b.get("labels", ["sif"]), "type": b.get("type", "Task"), "reporter": {"accountId": "human-1", "displayName": "Rae"}, "comments": []}
+    issues[b["key"]] = {"summary": b["summary"], "description": b["description"], "labels": b.get("labels", ["sis"]), "type": b.get("type", "Task"), "reporter": {"accountId": "human-1", "displayName": "Rae"}, "comments": []}
     return {"ok": True}
 
 

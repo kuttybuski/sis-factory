@@ -12,7 +12,7 @@ create table intake_pauses (
 -- The audit log is append-only: rows cannot be changed, and deleted only by the retention job, which says so for its own transaction.
 create or replace function audit_log_append_only() returns trigger language plpgsql as $$
 begin
-    if tg_op = 'DELETE' and coalesce(current_setting('sif.audit_purge', true), '') = 'on' then
+    if tg_op = 'DELETE' and coalesce(current_setting('sis.audit_purge', true), '') = 'on' then
         return old;
     end if;
     raise exception 'audit_log is append-only';

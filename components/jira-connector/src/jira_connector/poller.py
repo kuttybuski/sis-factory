@@ -1,4 +1,4 @@
-"""Pickup (label -> workflow) and replies (@sif comment -> signal). Safe to run repeatedly: every step is idempotent."""
+"""Pickup (label -> workflow) and replies (@sis comment -> signal). Safe to run repeatedly: every step is idempotent."""
 
 import logging
 import re
@@ -8,12 +8,12 @@ from typing import Any, Protocol
 
 import httpx
 
-from sif_contracts import Settings
-from sif_contracts import lessons as L
-from sif_contracts import handling as H
-from sif_contracts import policy
-from sif_contracts.intake import held_back
-from sif_contracts.workflow import SIG_REPLY, Reply, TaskInput
+from sis_contracts import Settings
+from sis_contracts import lessons as L
+from sis_contracts import handling as H
+from sis_contracts import policy
+from sis_contracts.intake import held_back
+from sis_contracts.workflow import SIG_REPLY, Reply, TaskInput
 
 from jira_connector.adf import adf_to_text, clean
 from jira_connector.client import JiraClient
@@ -42,14 +42,14 @@ class Config:
     @classmethod
     def from_env(cls, env: dict[str, str]) -> "Config":
         responders: dict[str, L.Role] = {}
-        for role, var in ((L.Role.MEMBER, "SIF_RESPONDERS"), (L.Role.MAINTAINER, "SIF_MAINTAINERS"), (L.Role.TEAM_LEAD, "SIF_TEAM_LEADS"), (L.Role.ADMIN, "SIF_ADMINS")):
+        for role, var in ((L.Role.MEMBER, "SIS_RESPONDERS"), (L.Role.MAINTAINER, "SIS_MAINTAINERS"), (L.Role.TEAM_LEAD, "SIS_TEAM_LEADS"), (L.Role.ADMIN, "SIS_ADMINS")):
             for who in filter(None, (x.strip() for x in env.get(var, "").split(","))):
                 responders[who] = role
         s = Settings()
-        return cls(settings=s, allowed_projects={p for p in env.get("SIF_ALLOWED_JIRA_PROJECTS", "").split(",") if p}, responders=responders,
-                   max_concurrent=int(env.get("SIF_MAX_CONCURRENT_TASKS", "5")), bot_account_id=s.bot_account_id,
-                   wait_timeout_seconds=s.wait_timeout_minutes * 60, max_run_seconds=int(env.get("SIF_MAX_RUN_MINUTES", "240")) * 60,
-                   review_poll_seconds=int(env.get("SIF_REVIEW_POLL_SECONDS", "60")))
+        return cls(settings=s, allowed_projects={p for p in env.get("SIS_ALLOWED_JIRA_PROJECTS", "").split(",") if p}, responders=responders,
+                   max_concurrent=int(env.get("SIS_MAX_CONCURRENT_TASKS", "5")), bot_account_id=s.bot_account_id,
+                   wait_timeout_seconds=s.wait_timeout_minutes * 60, max_run_seconds=int(env.get("SIS_MAX_RUN_MINUTES", "240")) * 60,
+                   review_poll_seconds=int(env.get("SIS_REVIEW_POLL_SECONDS", "60")))
 
 
 def resolve_role(person: dict, issue_fields: dict, cfg: Config) -> L.Role:
@@ -126,7 +126,7 @@ async def pickup_cycle(jira: JiraClient, flow: Flow, teams: list[dict], cfg: Con
         if not policy.should_pick(labels, s):
             continue
         if cfg.allowed_projects and key.split("-")[0] not in cfg.allowed_projects:
-            log.info("ignoring %s: project is not on SIF_ALLOWED_JIRA_PROJECTS", key)
+            log.info("ignoring %s: project is not on SIS_ALLOWED_JIRA_PROJECTS", key)
             continue
         team = team_for(key, teams)
         if why := held_back((team or {}).get("name", ""), intake):
@@ -136,7 +136,7 @@ async def pickup_cycle(jira: JiraClient, flow: Flow, teams: list[dict], cfg: Con
         built = build_input(issue, team, cfg, resolved)
         if isinstance(built, str):
             await jira.add_comment(key, f"{s.mention} did not start. {built}")
-            await jira.update_labels(key, ["sif-needs-info"], [s.label_trigger])
+            await jira.update_labels(key, ["sis-needs-info"], [s.label_trigger])
             continue
         if dry_run:
             log.info("DRY RUN: would start %s for %s (%s)", key, built.repo, built.title)
@@ -202,7 +202,7 @@ async def relay_answer(jira: JiraClient, flow: Flow, team: dict | None, key: str
     """An answer typed on the 3D view. It is posted on the ticket first, so Jira keeps the whole conversation even if Temporal's history is
     lost, then given to the waiting task like a Jira reply (the comment id keeps the workflow and reply_cycle from taking it twice).
     False if the ticket has no running task."""
-    cid = await jira.add_comment(key, f"{by} answered in the SIF 3D view:\n\n{text}")
+    cid = await jira.add_comment(key, f"{by} answered in the SIS 3D view:\n\n{text}")
     comment_id = f"{key}:{cid}" if cid else ""
     if comment_id:
         seen.add(comment_id)
@@ -231,7 +231,7 @@ async def reply_cycle(jira: JiraClient, flow: Flow, portal: httpx.AsyncClient, t
                 log.info("ignoring a comment on %s from %s: not an allowed responder", key, who.get("displayName"))
                 counts["ignored"] += 1
                 continue
-            if cmd := L.parse_command(c["text"], s):  # commands first: "@sif remember ..." is not an answer to a question
+            if cmd := L.parse_command(c["text"], s):  # commands first: "@sis remember ..." is not an answer to a question
                 await handle_command(cmd, jira, portal, key, c, role, repo, team, Config(settings=s, responders=cfg.responders))
                 counts["commands"] += 1
                 continue

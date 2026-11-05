@@ -1,5 +1,5 @@
-from sif_contracts.events import EventType as T
-from sif_contracts.events import FactoryEvent
+from sis_contracts.events import EventType as T
+from sis_contracts.events import FactoryEvent
 
 from portal_api.projector import project
 
@@ -104,7 +104,7 @@ def test_a_merge_records_how_many_commits_people_added():
 def test_context_and_publishing_are_stages_of_a_running_task():
     row = run(ev(T.TASK_DISCOVERED), ev(T.REPO_CHECKED_OUT), ev(T.CONTEXT_STARTED))
     assert (row["stage"], row["outcome"]) == ("context", None)
-    row = run(ev(T.TASK_DISCOVERED), ev(T.PUBLISH_STARTED, text="sif/PAY-1-x"))
+    row = run(ev(T.TASK_DISCOVERED), ev(T.PUBLISH_STARTED, text="sis/PAY-1-x"))
     assert (row["stage"], row["outcome"]) == ("publishing", None)
 
 

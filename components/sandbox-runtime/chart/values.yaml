@@ -1,4 +1,4 @@
 runtimeClassName: gvisor
 handler: runsc
-# Restrict sandbox pods to nodes that have runsc installed, e.g. {sif.io/gvisor: "true"}
+# Restrict sandbox pods to nodes that have runsc installed, e.g. {sis.io/gvisor: "true"}
 nodeSelector: {}

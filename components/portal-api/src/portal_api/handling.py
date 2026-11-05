@@ -1,5 +1,5 @@
 """Handling policies: how each kind of ticket (epic, feature, story, task) is worked, for the whole factory or one team's override.
-jira-connector snapshots the effective policy into each workflow (sif_contracts.handling)."""
+jira-connector snapshots the effective policy into each workflow (sis_contracts.handling)."""
 
 from typing import Any, Literal
 
@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from injection_guard import Verdict, check_outbound, scan
-from sif_contracts import handling as H
+from sis_contracts import handling as H
 
 from portal_api import db, settings
 from portal_api.auth import dashboard_guard, pool

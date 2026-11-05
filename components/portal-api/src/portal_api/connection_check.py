@@ -2,7 +2,7 @@
 
 import httpx
 
-from sif_contracts.connections import GithubCreds, JiraCreds, redact
+from sis_contracts.connections import GithubCreds, JiraCreds, redact
 
 client_factory = httpx.AsyncClient  # tests swap in a client with a mock transport
 

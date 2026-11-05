@@ -26,7 +26,7 @@ All signals come from the factory's own event log, so they exist for every team 
 | Outcomes | merged / closed, review rounds, fixups per task | whether any of the above improved |
 
 context-ingest separately mines review threads on *all* merged PRs in a team's repositories, including PRs written by people
-(`SIF_REVIEW_MIN_COUNT`), so the factory learns team conventions before it has a history of its own.
+(`SIS_REVIEW_MIN_COUNT`), so the factory learns team conventions before it has a history of its own.
 
 ## Proposals
 
@@ -41,23 +41,23 @@ Every factory PR that merges becomes a **replay case**: the ticket, the commit t
 merged (`eval_cases`). Because that diff includes review revisions and human fixups, it is what the team finally accepted.
 
 **Replay** on a lesson (Learning page, operator role, or `POST /api/lessons/{id}/replay`) re-runs the most recent cases in the lesson's
-scope (up to `SIF_EVAL_MAX_CASES`, 20) twice in sandboxes: once with the lesson forced into the rules, even if it is still a candidate,
+scope (up to `SIS_EVAL_MAX_CASES`, 20) twice in sandboxes: once with the lesson forced into the rules, even if it is still a candidate,
 and once without it. orchestrator-worker picks the request up and runs an `EvalWorkflow`. Each case's two arms run side by side as
-`ReplayWorkflow`s, the same developer agent with the same sandbox and budget cap (`SIF_EVAL_BUDGET_USD` per replay) but no Jira and no PR,
+`ReplayWorkflow`s, the same developer agent with the same sandbox and budget cap (`SIS_EVAL_BUDGET_USD` per replay) but no Jira and no PR,
 and questions get a standing "no one is available, decide and say so" answer.
 
-Each patch is scored against the reference: 40% overlap of touched files, 60% overlap of changed lines. A score of `SIF_EVAL_PASS_SCORE`
+Each patch is scored against the reference: 40% overlap of touched files, 60% overlap of changed lines. A score of `SIS_EVAL_PASS_SCORE`
 (0.5) or more counts as solving the ticket. The two counts go through the same gate as every eval (`learn.passes_gate`: at least 10
 tickets, and no worse than without), and are written onto the lesson, so the knowledge PR shows them.
 
 Similarity to the merged diff is a proxy: a different correct fix scores lower than it deserves. The proxy is biased the same way on both
-arms of a case, so the comparison is still fair. A replay run costs up to 2 × cases × `SIF_EVAL_BUDGET_USD`. That is why
-`SIF_EVAL_AUTO` (replay every lesson the cycle proposes) is off by default.
+arms of a case, so the comparison is still fair. A replay run costs up to 2 × cases × `SIS_EVAL_BUDGET_USD`. That is why
+`SIS_EVAL_AUTO` (replay every lesson the cycle proposes) is off by default.
 
 ## Adopting lessons: the daily knowledge PR
 
-Candidate lessons for a repository are not reviewed one by one. At most once every `SIF_DIGEST_HOURS` (24) per repository, its new
-candidates go into **one pull request** that appends them to a managed block in the repository's `SIF_DIGEST_FILE` (`CLAUDE.md`). The PR
+Candidate lessons for a repository are not reviewed one by one. At most once every `SIS_DIGEST_HOURS` (24) per repository, its new
+candidates go into **one pull request** that appends them to a managed block in the repository's `SIS_DIGEST_FILE` (`CLAUDE.md`). The PR
 says, for each lesson, where it came from, its evidence and its replay result.
 
 - **Merge** it: the lessons still in the block are adopted (approved, by whoever merged), and `in_repo` from then on. The factory stops
@@ -68,7 +68,7 @@ says, for each lesson, where it came from, its evidence and its replay result.
   `CLAUDE.md` is disabled at the next knowledge PR's merge.
 
 While a knowledge PR is open, new candidates for that repository wait for the next one. Team and global lessons (no single repository)
-are still approved on the Learning page. `SIF_DIGEST_HOURS=0` turns the PRs off, and every candidate is approved there.
+are still approved on the Learning page. `SIS_DIGEST_HOURS=0` turns the PRs off, and every candidate is approved there.
 
 Adopted lessons are no longer held out (they are in the repository for every task). They were judged by replay before the PR, and the
 cycle still reports when reviewers keep asking for what one of them says.
@@ -77,16 +77,16 @@ cycle still reports when reviewers keep asking for what one of them says.
 
 The question is whether a lesson changed outcomes. Comparing tasks before and after it was approved does not answer that, because the
 repository, the tickets and the reviewers change in the meantime. So every lesson that no person wrote (mined, from PR reviews, suggested by
-the agent) is withheld from a random `SIF_LESSON_HOLDOUT_PCT` (20%) of the tasks it would apply to. Which tasks are held out is decided by a
+the agent) is withheld from a random `SIS_LESSON_HOLDOUT_PCT` (20%) of the tasks it would apply to. Which tasks are held out is decided by a
 hash of task and lesson. A task's first attempt and every review round therefore land in the same group, and each lesson's groups are
 independent of the others'. Both groups are recorded (`lesson_uses`).
 
 Each finished task gets a quality score: 1 if it merged as delivered, 0.5 if it merged after revision rounds or human commits, 0 if it was
-not merged. A lesson is judged once both groups have `SIF_IMPROVE_MIN_TASKS` (10) finished tasks. A difference counts only if it is at
+not merged. A lesson is judged once both groups have `SIS_IMPROVE_MIN_TASKS` (10) finished tasks. A difference counts only if it is at
 least 0.1 and larger than 1.64 standard errors.
 
 - **hurts**: the cycle disables the lesson and records the numbers as the reason (`retired automatically: …`).
-- **helps**: the result is recorded as a passed eval (`eval_status`). That passed eval is what `SIF_LESSON_GLOBAL_REQUIRES_EVAL` asks for.
+- **helps**: the result is recorded as a passed eval (`eval_status`). That passed eval is what `SIS_LESSON_GLOBAL_REQUIRES_EVAL` asks for.
 - **no effect**, after three times the minimum: proposed for removal, because every rule costs prompt budget and attention.
 
 Lessons a person taught are always delivered and never retired automatically. The cycle still reports when reviewers keep asking for what
@@ -117,7 +117,7 @@ or prompts, or open tickets. Every run is stored (`improvement_runs`) with what 
 
 ## Running it
 
-portal-api runs the cycle every `SIF_IMPROVE_MINUTES` (60; `0` = only on demand), looking back `SIF_IMPROVE_DAYS` (30). Measurements use
+portal-api runs the cycle every `SIS_IMPROVE_MINUTES` (60; `0` = only on demand), looking back `SIS_IMPROVE_DAYS` (30). Measurements use
 three times that window. Operators can also start a run from the Learning page.
 
 | | |

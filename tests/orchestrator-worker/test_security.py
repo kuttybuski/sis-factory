@@ -60,7 +60,7 @@ async def test_new_attempts_become_one_pr_on_the_team_repo_with_a_log_and_a_bloc
     portal, broker, seen = fakes({})
     assert await open_due_security_prs(portal, broker) == 1
     pub = next(b for _, path, b in seen if path == "/v1/publish")
-    assert pub["repo"] == "acme/app" and pub["team"] == "Mobile" and pub["branch"].startswith("sif/security-") and pub["branch"].endswith("-1") and not pub["draft"]
+    assert pub["repo"] == "acme/app" and pub["team"] == "Mobile" and pub["branch"].startswith("sis/security-") and pub["branch"].endswith("-1") and not pub["draft"]
     assert pub["title"].startswith("Security: 2 prompt-injection attempts caught")
     assert "| SCRUM-7 | a reply on Jira or in the 3D view | block | 85 |" in pub["body"] and "**Merge**" in pub["body"]
     patch = pub["patch"]

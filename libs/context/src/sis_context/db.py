@@ -10,17 +10,17 @@ from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool
 from pydantic import BaseModel
 
-from sif_context.embed import Embedder, vector_literal
-from sif_context.models import DocIn, Hit
-from sif_context.rank import boost, dedupe_per_doc, keyword_query, rrf
-from sif_context.safety import screen
+from sis_context.embed import Embedder, vector_literal
+from sis_context.models import DocIn, Hit
+from sis_context.rank import boost, dedupe_per_doc, keyword_query, rrf
+from sis_context.safety import screen
 
 
 def make_pool(url: str) -> AsyncConnectionPool:
     return AsyncConnectionPool(url, open=False, kwargs={"row_factory": dict_row}, min_size=1, max_size=10)
 
 
-async def migrate(pool: AsyncConnectionPool, package: str = "sif_context.migrations") -> None:
+async def migrate(pool: AsyncConnectionPool, package: str = "sis_context.migrations") -> None:
     """Applies the package's *.sql files that have not run yet, in name order, each in its own transaction."""
     files = sorted(f for f in resources.files(package).iterdir() if f.name.endswith(".sql"))
     async with pool.connection() as conn:
@@ -33,7 +33,7 @@ async def migrate(pool: AsyncConnectionPool, package: str = "sif_context.migrati
                     await conn.execute("insert into schema_migrations (name) values (%s)", (f.name,))
 
 
-async def open_pool(url: str, package: str = "sif_context.migrations") -> AsyncConnectionPool:
+async def open_pool(url: str, package: str = "sis_context.migrations") -> AsyncConnectionPool:
     """An open, migrated pool. Waits up to 30 seconds for Postgres, which may still be starting with the stack."""
     pool = make_pool(url)
     await pool.open()

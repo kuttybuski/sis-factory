@@ -48,8 +48,8 @@ async def run(gw: Gateway, agent: str, root: Path, gateway_url: str, token: str,
             return await finish_document(gw, task, repo, outcome)
         patch = await make_patch(repo)
         if not patch.strip():
-            demo = (" This is the demo agent (SIF_AGENT=scripted): it only follows lines such as `edit src/app.py: replace \"a\" with \"b\"`."
-                    " Set SIF_AGENT=claude for real work.") if agent == "scripted" else ""
+            demo = (" This is the demo agent (SIS_AGENT=scripted): it only follows lines such as `edit src/app.py: replace \"a\" with \"b\"`."
+                    " Set SIS_AGENT=claude for real work.") if agent == "scripted" else ""
             await gw.fail("The agent finished without changing any files." + demo)
             return 1
         await gw.log(changes(patch))
@@ -76,18 +76,18 @@ async def finish_document(gw: Gateway, task: Task, repo: Path, outcome) -> int:
 
 
 def main() -> None:
-    url, token = os.environ["SIF_GATEWAY_URL"], os.environ["SIF_TASK_TOKEN"]
+    url, token = os.environ["SIS_GATEWAY_URL"], os.environ["SIS_TASK_TOKEN"]
     gw = Gateway(url, token)
-    code = asyncio.run(run(gw, os.environ.get("SIF_AGENT", "scripted"), Path(os.environ.get("SIF_WORKSPACE", "/workspace")), url, token, os.environ.get("SIF_MODEL_IMPLEMENTATION", "claude-haiku-5-5")))
+    code = asyncio.run(run(gw, os.environ.get("SIS_AGENT", "scripted"), Path(os.environ.get("SIS_WORKSPACE", "/workspace")), url, token, os.environ.get("SIS_MODEL_IMPLEMENTATION", "claude-haiku-5-5")))
     sys.exit(code)
 
 
 def ask_main() -> None:
-    """`sif-ask "question"`: asks a human through Jira and prints the answer. The agent calls this from its shell tool."""
+    """`sis-ask "question"`: asks a human through Jira and prints the answer. The agent calls this from its shell tool."""
     if len(sys.argv) < 2:
-        print('usage: sif-ask "your question"', file=sys.stderr)
+        print('usage: sis-ask "your question"', file=sys.stderr)
         sys.exit(64)
-    gw = Gateway(os.environ["SIF_GATEWAY_URL"], os.environ["SIF_TASK_TOKEN"])
+    gw = Gateway(os.environ["SIS_GATEWAY_URL"], os.environ["SIS_TASK_TOKEN"])
     try:
         print(asyncio.run(gw.ask(" ".join(sys.argv[1:]))))
     except Stopped as e:

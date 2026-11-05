@@ -25,11 +25,11 @@ class Upstream:
         self.seen.append((str(req.url), req.headers.get("authorization", "")))
         path = req.url.path
         if path == "/rest/api/3/myself":
-            return httpx.Response(200, json={"displayName": "Sif Bot"}) if self.jira_ok else httpx.Response(401)
+            return httpx.Response(200, json={"displayName": "Sis Bot"}) if self.jira_ok else httpx.Response(401)
         if path.startswith("/rest/api/3/project/"):
             return httpx.Response(200 if path.rsplit("/", 1)[1] in self.visible else 404)
         if path == "/user":
-            return httpx.Response(200, json={"login": "sif-bot"}) if self.github_ok else httpx.Response(401)
+            return httpx.Response(200, json={"login": "sis-bot"}) if self.github_ok else httpx.Response(401)
         if path.startswith("/repos/"):
             return httpx.Response(200 if path.removeprefix("/repos/") in self.readable else 404)
         return httpx.Response(404)
@@ -38,10 +38,10 @@ class Upstream:
 @pytest.fixture(scope="module")
 def client():
     mp = pytest.MonkeyPatch()
-    mp.setenv("SIF_INGEST_TOKEN", "test-token")
-    mp.setenv("SIF_INTERNAL_TOKEN", "internal-token")
-    mp.setenv("SIF_SECRET_KEY", Fernet.generate_key().decode())
-    mp.setenv("SIF_ALLOW_PRIVATE_URLS", "true")
+    mp.setenv("SIS_INGEST_TOKEN", "test-token")
+    mp.setenv("SIS_INTERNAL_TOKEN", "internal-token")
+    mp.setenv("SIS_SECRET_KEY", Fernet.generate_key().decode())
+    mp.setenv("SIS_ALLOW_PRIVATE_URLS", "true")
     from portal_api.main import app
 
     with TestClient(app) as c:
@@ -80,7 +80,7 @@ def test_a_good_jira_connection_is_saved_checked_and_shown_without_its_secret(cl
     r = put(client, "jira", JIRA)
     assert r.status_code == 200
     body = r.json()
-    assert body["status"] == "connected" and "Signed in as Sif Bot" in body["detail"] and "CNX" in body["detail"] and body["checked_at"]
+    assert body["status"] == "connected" and "Signed in as Sis Bot" in body["detail"] and "CNX" in body["detail"] and body["checked_at"]
     assert body["secret_hint"] == "••••1234" and body["config"] == JIRA["config"]
     everything = client.get("/api/connections").text + r.text
     assert TOKEN not in everything and all("secret" not in c for c in client.get("/api/connections").json()["connections"])
@@ -98,7 +98,7 @@ def test_bad_credentials_and_missing_projects_are_reported_not_hidden(client, up
 
 def test_github_checks_the_token_and_the_teams_repos(client, up):
     ok = put(client, "github", {"secret": GH}).json()
-    assert ok["status"] == "connected" and "sif-bot" in ok["detail"] and "acme/api" in ok["detail"]
+    assert ok["status"] == "connected" and "sis-bot" in ok["detail"] and "acme/api" in ok["detail"]
     up.readable = set()
     bad = client.post(f"/api/connections/{TEAM}/github/test", headers=AUTH).json()
     assert bad["status"] == "failed" and "cannot read: acme/api" in bad["detail"]
@@ -142,24 +142,24 @@ def test_input_is_validated(client, up):
 
 
 def test_private_addresses_are_refused_unless_allowed(client, up, monkeypatch):
-    monkeypatch.setenv("SIF_ALLOW_PRIVATE_URLS", "false")
+    monkeypatch.setenv("SIS_ALLOW_PRIVATE_URLS", "false")
     r = put(client, "jira", {"config": {"base_url": "https://127.0.0.1", "email": "b@a.test"}, "secret": TOKEN})
     assert r.status_code == 422 and "private address" in r.json()["detail"]
     assert put(client, "jira", {"config": {"base_url": "http://93.184.216.34", "email": "b@a.test"}, "secret": TOKEN}).status_code == 422  # http
 
 
 def test_without_a_vault_key_nothing_is_stored(client, up, monkeypatch):
-    monkeypatch.delenv("SIF_SECRET_KEY")
+    monkeypatch.delenv("SIS_SECRET_KEY")
     r = put(client, "jira", JIRA)
-    assert r.status_code == 503 and "SIF_SECRET_KEY" in r.json()["detail"] and row(client, "jira") is None
+    assert r.status_code == 503 and "SIS_SECRET_KEY" in r.json()["detail"] and row(client, "jira") is None
     assert client.get("/api/connections").json()["vault"] is False
 
 
 def test_a_changed_key_is_reported_as_a_failed_connection_not_a_crash(client, up, monkeypatch):
     put(client, "jira", JIRA)
-    monkeypatch.setenv("SIF_SECRET_KEY", Fernet.generate_key().decode())
+    monkeypatch.setenv("SIS_SECRET_KEY", Fernet.generate_key().decode())
     out = client.post(f"/api/connections/{TEAM}/jira/test", headers=AUTH).json()
-    assert out["status"] == "failed" and "SIF_SECRET_KEY" in out["detail"]
+    assert out["status"] == "failed" and "SIS_SECRET_KEY" in out["detail"]
     assert client.get(f"/api/internal/connections/{TEAM}/jira", headers=INTERNAL).status_code == 500
 
 

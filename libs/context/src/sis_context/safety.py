@@ -4,8 +4,8 @@ from dataclasses import dataclass
 
 from injection_guard import Verdict, redact, scan
 
-from sif_context.models import Chunk
-from sif_context.pii import enabled, redact_pii
+from sis_context.models import Chunk
+from sis_context.pii import enabled, redact_pii
 
 # How much to trust the text, by the kind of document it came from (see injection_guard.scanner.SOURCE_PROFILE).
 # Wiki pages can be edited by many people with little review, so they get the strict profile; repo files are code-reviewed.

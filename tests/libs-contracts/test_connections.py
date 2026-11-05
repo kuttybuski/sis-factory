@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-from sif_contracts import connections as C
+from sis_contracts import connections as C
 
 
 def public(host):

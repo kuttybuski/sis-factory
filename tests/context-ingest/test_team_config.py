@@ -2,7 +2,7 @@
 
 import pytest
 from context_ingest import sync
-from sif_contracts.connections import ConnectionsUnavailable, GithubCreds, JiraCreds
+from sis_contracts.connections import ConnectionsUnavailable, GithubCreds, JiraCreds
 
 
 class Creds:

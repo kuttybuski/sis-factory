@@ -8,12 +8,12 @@ ALL = "*"  # a pause for every team
 
 @dataclass(frozen=True)
 class Limits:
-    max_running: int = 0  # running tasks per team; 0 = only the overall SIF_MAX_CONCURRENT_TASKS
+    max_running: int = 0  # running tasks per team; 0 = only the overall SIS_MAX_CONCURRENT_TASKS
     max_daily: int = 25  # tasks a team may start in 24 hours; 0 = no limit
 
     @classmethod
     def from_env(cls, env) -> "Limits":
-        return cls(max_running=int(env.get("SIF_MAX_CONCURRENT_PER_TEAM", "0")), max_daily=int(env.get("SIF_MAX_TASKS_PER_TEAM_PER_DAY", "25")))
+        return cls(max_running=int(env.get("SIS_MAX_CONCURRENT_PER_TEAM", "0")), max_daily=int(env.get("SIS_MAX_TASKS_PER_TEAM_PER_DAY", "25")))
 
 
 def held_back(team: str, intake: dict | None) -> str | None:
@@ -27,7 +27,7 @@ def held_back(team: str, intake: dict | None) -> str | None:
     limits, n = intake.get("limits") or {}, intake.get("counts", {}).get(team, {})
     who = team or "tickets without a team"
     if (cap := limits.get("max_running", 0)) and n.get("running", 0) >= cap:
-        return f"{who} already has {n['running']} running task(s), its limit (SIF_MAX_CONCURRENT_PER_TEAM)"
+        return f"{who} already has {n['running']} running task(s), its limit (SIS_MAX_CONCURRENT_PER_TEAM)"
     if (cap := limits.get("max_daily", 0)) and n.get("started_24h", 0) >= cap:
-        return f"{who} started {n['started_24h']} task(s) in 24 hours, its limit (SIF_MAX_TASKS_PER_TEAM_PER_DAY)"
+        return f"{who} started {n['started_24h']} task(s) in 24 hours, its limit (SIS_MAX_TASKS_PER_TEAM_PER_DAY)"
     return None

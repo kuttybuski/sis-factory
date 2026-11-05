@@ -6,9 +6,9 @@ from psycopg import errors
 from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool
 
-from sif_context import db as shared
-from sif_contracts.events import EventType, FactoryEvent
-from sif_contracts.namespaces import namespace_for
+from sis_context import db as shared
+from sis_contracts.events import EventType, FactoryEvent
+from sis_contracts.namespaces import namespace_for
 
 from portal_api.projector import project, to_dt
 
@@ -639,7 +639,7 @@ async def purge(pool: AsyncConnectionPool, *, event_days: int, audit_days: int) 
                 "delete from task_events e using tasks t where t.id = e.task_id and t.ended_at is not null and e.ts < now() - make_interval(days => %s)",
                 (event_days,))).rowcount
         if audit_days > 0:
-            await conn.execute("set local sif.audit_purge = 'on'")
+            await conn.execute("set local sis.audit_purge = 'on'")
             out["audit"] = (await conn.execute("delete from audit_log where at < now() - make_interval(days => %s)", (audit_days,))).rowcount
     return out
 

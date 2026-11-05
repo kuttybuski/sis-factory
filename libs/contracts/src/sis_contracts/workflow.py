@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass, field
 
-ORCHESTRATOR_QUEUE = "sif-orchestrator"
-JIRA_QUEUE = "sif-jira"
+ORCHESTRATOR_QUEUE = "sis-orchestrator"
+JIRA_QUEUE = "sis-jira"
 WORKFLOW = "TaskWorkflow"
 # Once its PR is open a task continues as this type, under the same workflow id: it no longer counts against the concurrency limit.
 REVIEW_WORKFLOW = "ReviewWorkflow"
@@ -35,11 +35,11 @@ class TaskInput:
     budget_extension_usd: float = 2.0
     wait_timeout_seconds: int = 7200
     max_run_seconds: int = 14400
-    mention: str = "@sif"
+    mention: str = "@sis"
     kind: str = "task"  # epic | feature | story | task, from the Jira issue type
     max_revisions: int = 3  # feedback rounds on a document before a person must approve or stop
     parent_key: str = ""  # the epic or feature this issue was split from, if any
-    policy: dict = field(default_factory=dict)  # sif_contracts.handling.Policy as resolved at pickup; empty means the built-in default for the kind
+    policy: dict = field(default_factory=dict)  # sis_contracts.handling.Policy as resolved at pickup; empty means the built-in default for the kind
     review_poll_seconds: int = 0  # how often an open PR is checked for review comments, failing CI and merge; 0 ends the task when the PR opens
     review_watch_seconds: int = 14 * 24 * 3600  # stop watching a PR nobody acts on after this long
     max_review_rounds: int = 3  # agent revisions per PR before the reviewer must finish it by hand

@@ -8,21 +8,21 @@ import httpx
 from fastapi import FastAPI, Query, Request
 from pydantic import BaseModel, Field
 
-from sif_context import db
-from sif_context.embed import embedder_from_env
-from sif_context.pack import build_pack
-from sif_contracts import posture
+from sis_context import db
+from sis_context.embed import embedder_from_env
+from sis_context.pack import build_pack
+from sis_contracts import posture
 
 log = logging.getLogger("context_api")
 PORTAL_API_URL = os.environ.get("PORTAL_API_URL", "http://portal-api:8000")
-GAP_SIM = float(os.environ.get("SIF_CONTEXT_GAP_SIM", "0.3"))  # below this best similarity the task's topic counts as undocumented
-QA_REUSE_SIM = float(os.environ.get("SIF_QA_REUSE_SIM", "0.8"))  # an earlier answer this similar may be offered instead of asking again
-QA_PACK_SIM = float(os.environ.get("SIF_QA_PACK_SIM", "0.5"))
+GAP_SIM = float(os.environ.get("SIS_CONTEXT_GAP_SIM", "0.3"))  # below this best similarity the task's topic counts as undocumented
+QA_REUSE_SIM = float(os.environ.get("SIS_QA_REUSE_SIM", "0.8"))  # an earlier answer this similar may be offered instead of asking again
+QA_PACK_SIM = float(os.environ.get("SIS_QA_PACK_SIM", "0.5"))
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    posture.enforce("context-api")  # SIF_ENV=production: refuse to start with unsafe settings; also loads NAME_FILE secrets
+    posture.enforce("context-api")  # SIS_ENV=production: refuse to start with unsafe settings; also loads NAME_FILE secrets
     pool = await db.open_pool(os.environ["DATABASE_URL"])
     app.state.pool, app.state.embedder = pool, embedder_from_env()
     app.state.portal = httpx.AsyncClient(base_url=PORTAL_API_URL, timeout=10)
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     await pool.close()
 
 
-app = FastAPI(title="sif context-api", lifespan=lifespan)
+app = FastAPI(title="sis context-api", lifespan=lifespan)
 pool = lambda r: r.app.state.pool  # noqa: E731
 
 

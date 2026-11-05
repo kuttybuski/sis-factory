@@ -14,7 +14,7 @@ AUTH = {"Authorization": "Bearer test-token"}
 
 @pytest.fixture(scope="module")
 def client():
-    os.environ["SIF_INGEST_TOKEN"] = "test-token"
+    os.environ["SIS_INGEST_TOKEN"] = "test-token"
     from portal_api.main import app
 
     with TestClient(app) as c:
@@ -97,7 +97,7 @@ def test_an_answer_from_the_3d_view_goes_to_jira_connector_only_while_the_task_w
         return httpx.Response(200, json={"delivered": True, "dry_run": False})
 
     monkeypatch.setattr(main.httpx, "AsyncClient", lambda **kw: real(transport=httpx.MockTransport(handler), **kw))
-    monkeypatch.setenv("SIF_INTERNAL_TOKEN", "internal")
+    monkeypatch.setenv("SIS_INTERNAL_TOKEN", "internal")
     body = {"text": "Use backoff", "by": "ann@acme.com"}
     assert client.post("/api/tasks/PAY-960/answer", json=body).status_code == 401
     assert client.post("/api/tasks/NOPE-9/answer", json=body, headers=AUTH).status_code == 404
@@ -109,7 +109,7 @@ def test_an_answer_from_the_3d_view_goes_to_jira_connector_only_while_the_task_w
 
 
 def test_demo_rows_are_hidden_unless_requested(client):
-    from sif_contracts.events import EventType, FactoryEvent
+    from sis_contracts.events import EventType, FactoryEvent
 
     from portal_api import db
 
@@ -142,8 +142,8 @@ def test_kill_requests_are_handed_to_the_orchestrator_once(client):
 
 
 def test_every_change_is_audited_with_who_made_it_and_refusals_too(client):
-    client.put("/api/teams", headers={**AUTH, "X-Sif-Actor": "ann@example.com"}, json={"name": "Audited", "jira_projects": ["AUD"]})
-    client.put("/api/teams", headers={"X-Sif-Actor": "mallory@example.com"}, json={"name": "Nope"})  # no token: refused, still recorded
+    client.put("/api/teams", headers={**AUTH, "X-Sis-Actor": "ann@example.com"}, json={"name": "Audited", "jira_projects": ["AUD"]})
+    client.put("/api/teams", headers={"X-Sis-Actor": "mallory@example.com"}, json={"name": "Nope"})  # no token: refused, still recorded
     post(client, "task.discovered", "AUD-1")  # the event stream is service traffic, not a decision
     rows = client.get("/api/audit", params={"limit": 50}).json()
     assert {"actor": "ann@example.com", "method": "PUT", "path": "/api/teams", "status": 200}.items() <= next(r for r in rows if r["actor"] == "ann@example.com").items()
@@ -272,7 +272,7 @@ def test_candidate_lessons_are_bundled_into_one_knowledge_pr_per_repo_and_mergin
     d = claimed[0]
     assert not [x for x in client.post("/api/digests/claim", headers=AUTH).json() if x["repo"] == "acme/dig"]  # one at a time per repo
     c = mk("Digest rule three: arrives after the PR opened, waits")
-    client.post(f"/api/digests/{d['id']}/opened", headers=AUTH, json={"pr_number": 9, "pr_url": "https://x/pull/9", "branch": "sif/knowledge-x"})
+    client.post(f"/api/digests/{d['id']}/opened", headers=AUTH, json={"pr_number": 9, "pr_url": "https://x/pull/9", "branch": "sis/knowledge-x"})
     assert [x["id"] for x in client.get("/api/digests", params={"status": "open"}).json() if x["repo"] == "acme/dig"] == [d["id"]]
 
     # The reviewer deleted rule two's line before merging.
@@ -372,7 +372,7 @@ def test_injection_attempts_are_recorded_once_per_team_and_bundled_into_one_secu
     ids = [i["id"] for i in claimed[0]["incidents"]]
     inc(fingerprint=fp("d"))  # arrives while the PR is being opened: waits for the next one
     assert not [g for g in client.post("/api/security/claim", headers=AUTH).json() if g["repo"] == "acme/sec"]
-    client.post("/api/security/opened", headers=AUTH, json={"ids": ids, "pr_number": 4, "pr_url": "https://x/pull/4", "branch": "sif/security-x"})
+    client.post("/api/security/opened", headers=AUTH, json={"ids": ids, "pr_number": 4, "pr_url": "https://x/pull/4", "branch": "sis/security-x"})
     assert {i["id"] for i in client.get("/api/security/incidents", params={"team": "Sec", "status": "open"}).json()} == set(ids)
 
     # The reviewer kept a, deleted b's line, and merged.

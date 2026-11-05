@@ -13,9 +13,9 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from injection_guard import SYSTEM_GUIDANCE, Verdict, check_outbound, redact, scan
-from sif_contracts import posture
-from sif_contracts import handling as H
-from sif_contracts.workflow import Q_ANSWER, SIG_COST, SIG_DONE, SIG_FAILED, SIG_LOG, SIG_QUESTION, AgentResult, Question
+from sis_contracts import posture
+from sis_contracts import handling as H
+from sis_contracts.workflow import Q_ANSWER, SIG_COST, SIG_DONE, SIG_FAILED, SIG_LOG, SIG_QUESTION, AgentResult, Question
 
 from sandbox_gateway.orchestrator import TemporalOrchestrator
 from sandbox_gateway.state import Registry, TaskRec, cost_of, load_prices
@@ -29,19 +29,19 @@ class Config:
 
     def __init__(self) -> None:
         e = os.environ
-        self.internal_token = e.get("SIF_INTERNAL_TOKEN", "")
-        self.ingest_token = e.get("SIF_INGEST_TOKEN", "")
+        self.internal_token = e.get("SIS_INTERNAL_TOKEN", "")
+        self.ingest_token = e.get("SIS_INGEST_TOKEN", "")
         self.llm_url = e.get("LLM_UPSTREAM_URL", "").rstrip("/")
         self.llm_key = e.get("LLM_UPSTREAM_KEY", "")
         self.llm_style = e.get("LLM_UPSTREAM_AUTH", "bearer")  # bearer | x-api-key
-        self.models = {m for m in e.get("SIF_ALLOWED_MODELS", "").split(",") if m}
-        self.prices = load_prices(e.get("SIF_PRICE_TABLE"))
-        self.max_asks = int(e.get("SIF_MAX_ASKS", "10"))
-        self.allowed_hosts = {h for h in e.get("SIF_ALLOWED_LINK_HOSTS", "github.com").split(",") if h}
+        self.models = {m for m in e.get("SIS_ALLOWED_MODELS", "").split(",") if m}
+        self.prices = load_prices(e.get("SIS_PRICE_TABLE"))
+        self.max_asks = int(e.get("SIS_MAX_ASKS", "10"))
+        self.allowed_hosts = {h for h in e.get("SIS_ALLOWED_LINK_HOSTS", "github.com").split(",") if h}
         self.git_broker = e.get("GIT_BROKER_URL", "http://git-broker:8080")
         self.context_api = e.get("CONTEXT_API_URL", "http://context-api:8080")
         self.portal_api = e.get("PORTAL_API_URL", "http://portal-api:8000")
-        self.qa_reuse = float(e.get("SIF_QA_REUSE_SIM", "0.8"))
+        self.qa_reuse = float(e.get("SIS_QA_REUSE_SIM", "0.8"))
 
     @property
     def secret_literals(self) -> list[str]:
@@ -50,7 +50,7 @@ class Config:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    posture.enforce("sandbox-gateway")  # SIF_ENV=production: refuse to start with unsafe settings (sif_contracts.posture)
+    posture.enforce("sandbox-gateway")  # SIS_ENV=production: refuse to start with unsafe settings (sis_contracts.posture)
     app.state.cfg = Config()
     app.state.registry = Registry()
     if getattr(app.state, "orch", None) is None:
@@ -60,13 +60,13 @@ async def lifespan(app: FastAPI):
     await app.state.http.aclose()
 
 
-app = FastAPI(title="sif sandbox-gateway", lifespan=lifespan)
+app = FastAPI(title="sis sandbox-gateway", lifespan=lifespan)
 
 
 def internal(request: Request, authorization: str | None = Header(default=None)) -> None:
     token = request.app.state.cfg.internal_token
     if not token:
-        raise HTTPException(503, "SIF_INTERNAL_TOKEN is not configured")
+        raise HTTPException(503, "SIS_INTERNAL_TOKEN is not configured")
     if not secrets.compare_digest((authorization or "").removeprefix("Bearer "), token):
         raise HTTPException(401, "invalid token")
 

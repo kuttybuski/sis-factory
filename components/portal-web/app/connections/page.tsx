@@ -78,8 +78,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
         Each team can connect to its own Jira site and GitHub account. A team with no connection uses the shared credentials from the server
         environment. Tokens are stored encrypted and are never shown again; only the last four characters are.
       </div>
-      {!data.vault && <div className="msg flagged">The server has no <code>SIF_SECRET_KEY</code>, so tokens cannot be saved. Run <code>make init</code>, then restart portal-api.</div>}
-      {!SSO && <div className="msg flagged">This page accepts real credentials and sign-in is off: turn on SIF_AUTH_MODE=proxy (docs/security.md) before entering real tokens.</div>}
+      {!data.vault && <div className="msg flagged">The server has no <code>SIS_SECRET_KEY</code>, so tokens cannot be saved. Run <code>make init</code>, then restart portal-api.</div>}
+      {!SSO && <div className="msg flagged">This page accepts real credentials and sign-in is off: turn on SIS_AUTH_MODE=proxy (docs/security.md) before entering real tokens.</div>}
       {teams.length === 0 && <div className="empty">No teams yet. Add one with <code>PUT /api/teams</code> first.</div>}
       {teams.map((t) => (
         <section key={t.id} id={encodeURIComponent(t.name)}>

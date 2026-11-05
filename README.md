@@ -1,12 +1,12 @@
 <div align="center">
 
-# 🏭 SIF: the 3D Self-Improving Software Factory
+# 🏭 SIS: the 3D Self-Improving Software Factory
 
 ### Enterprise-grade. Self-improving. Watch your software get built in 3D.
 
 **Label a Jira ticket. Watch a robot pick it up on a 3D factory floor. Review the pull request.**
 
-[![License: 0BSD](https://img.shields.io/badge/license-0BSD-brightgreen.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/status-active-blue)
 ![Runs on](https://img.shields.io/badge/runs%20on-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)
 ![Containers](https://img.shields.io/badge/containers-Podman-892CA0)
@@ -19,7 +19,7 @@
 
 ## 🚀 The promise
 
-> **SIF is an Enterprise-grade 3D Self-Improving Software Factory that recursively improves itself.**
+> **SIS is an Enterprise-grade 3D Self-Improving Software Factory that recursively improves itself.**
 >
 > 📅 **Exactly one year from now, on or before 1 November 2027, we will deliver a 100% locally runnable software factory:**
 > no cloud, no outside API keys, no data leaving your machine.
@@ -33,7 +33,7 @@ into rules, tests whether each rule really helps, keeps what works and drops wha
 
 | | |
 |---|---|
-| 🎫 **Ticket to pull request** | Label a Jira ticket `sif`. A coding agent picks it up, changes the code and opens a **draft pull request** for people to review. |
+| 🎫 **Ticket to pull request** | Label a Jira ticket `sis`. A coding agent picks it up, changes the code and opens a **draft pull request** for people to review. |
 | 🌐 **A live 3D factory floor** | Every task is a robot moving through the factory in real time (React Three Fiber). Click a robot to see its logs, answer its questions or stop it. |
 | 🧠 **Self-improving** | Review feedback, CI failures and human fix-ups become candidate lessons. Each one is replayed on past tickets before it is adopted, then measured against a holdout group. Lessons that hurt are retired automatically. |
 | 🔒 **Locked-down sandboxes** | Agents run in isolated containers (gVisor-ready) with no model keys and no direct network access. Everything goes through audited gateways. |
@@ -48,7 +48,7 @@ into rules, tests whether each rule really helps, keeps what works and drops wha
 
 ```mermaid
 flowchart LR
-    J[🎫 Jira ticket<br/>labelled sif] --> C[jira-connector]
+    J[🎫 Jira ticket<br/>labelled sis] --> C[jira-connector]
     C --> O[⏱️ orchestrator<br/>Temporal]
     O --> G[🛡️ injection-guard]
     G --> S[📦 sandboxed<br/>coding agent]
@@ -122,8 +122,8 @@ make e2e          # the whole stack end to end against mock Jira and GitHub
 
 ## 📜 License
 
-[**BSD Zero Clause (0BSD)**](LICENSE): one of the most permissive licenses there is. Use it, change it, sell it, ship it, with no
-conditions and no attribution required.
+[**MIT**](LICENSE): use it, change it, sell it, ship it. The one condition is that copies keep the copyright and license
+notice.
 
 <div align="center">
 

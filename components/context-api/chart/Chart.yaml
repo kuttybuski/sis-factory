@@ -1,5 +1,5 @@
 apiVersion: v2
-name: sif-context-api
+name: sis-context-api
 description: Hybrid retrieval and CONTEXT.md packs
 type: application
 version: 0.1.0

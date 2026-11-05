@@ -1,4 +1,4 @@
--- What a team writes down about how it works (sif_contracts.knowledge): one row per team and section, every saved version kept.
+-- What a team writes down about how it works (sis_contracts.knowledge): one row per team and section, every saved version kept.
 create table team_knowledge (
     team text not null,
     section text not null,

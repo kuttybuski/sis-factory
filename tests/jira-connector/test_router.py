@@ -4,7 +4,7 @@ import pytest
 from jira_connector import activities
 from jira_connector.client import JiraClient
 from jira_connector.router import JiraRouter, NoConnection
-from sif_contracts.connections import ConnectionsUnavailable, JiraCreds
+from sis_contracts.connections import ConnectionsUnavailable, JiraCreds
 
 TEAMS = [{"name": "Payments", "jira_projects": ["PAY", "BILL"]}, {"name": "Mobile", "jira_projects": ["MOB"]}, {"name": "Empty", "jira_projects": []}]
 
@@ -146,7 +146,7 @@ async def test_dry_run_wraps_every_team_client_too():
 
 async def test_pickup_and_reply_searches_carry_the_scope():
     from jira_connector.poller import Config, Seen, pickup_cycle, reply_cycle
-    from sif_contracts import Settings
+    from sis_contracts import Settings
 
     seen = []
 
@@ -159,6 +159,6 @@ async def test_pickup_and_reply_searches_carry_the_scope():
     await pickup_cycle(Searcher("x"), None, [], cfg, scope='project in ("PAY")')
     await reply_cycle(Searcher("x"), None, None, [], cfg, Seen(), scope='project not in ("PAY")')
     await pickup_cycle(Searcher("x"), None, [], cfg)
-    assert seen[0].endswith('AND project in ("PAY") ORDER BY created ASC') and 'labels != "sif-picked"' in seen[0]
+    assert seen[0].endswith('AND project in ("PAY") ORDER BY created ASC') and 'labels != "sis-picked"' in seen[0]
     assert seen[1].endswith('updated >= -2d AND project not in ("PAY")')
     assert "project" not in seen[2]

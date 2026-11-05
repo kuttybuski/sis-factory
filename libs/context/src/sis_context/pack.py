@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from injection_guard import wrap_untrusted
 
-from sif_context.models import Hit, approx_tokens
+from sis_context.models import Hit, approx_tokens
 
 NO_ESCAPE_KINDS = {"code", "diff"}  # keep code readable; the per-call nonce still protects the wrapper
 

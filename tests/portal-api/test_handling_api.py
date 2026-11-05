@@ -12,7 +12,7 @@ TEAM = "Handling-Team"
 
 @pytest.fixture(scope="module")
 def client():
-    os.environ["SIF_INGEST_TOKEN"] = "test-token"
+    os.environ["SIS_INGEST_TOKEN"] = "test-token"
     from portal_api.main import app
 
     with TestClient(app) as c:

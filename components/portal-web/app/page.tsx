@@ -28,7 +28,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ d
       </div>
       <div className="panel glass">
         <h2>Active tasks</h2>
-        {o.active.length === 0 ? <div className="empty">No active tasks. Label a Jira ticket <code>sif</code> to start one.</div> : (
+        {o.active.length === 0 ? <div className="empty">No active tasks. Label a Jira ticket <code>sis</code> to start one.</div> : (
           <table>
             <thead><tr><th>Task</th><th>Team</th><th>Stage</th><th className="num">Cost</th><th>Started</th></tr></thead>
             <tbody>{o.active.map((t) => (

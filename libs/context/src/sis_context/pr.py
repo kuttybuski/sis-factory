@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from pydantic import BaseModel, Field
 
-from sif_context.models import Chunk, DocIn, approx_tokens
+from sis_context.models import Chunk, DocIn, approx_tokens
 
 JIRA_KEY = re.compile(r"\b[A-Z][A-Z0-9]{1,9}-\d+\b")
 _NOISE = re.compile(r"(^|/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|poetry\.lock|uv\.lock|Cargo\.lock|go\.sum)$|\.min\.(js|css)$|(^|/)(dist|build|vendor|node_modules)/")

@@ -2,7 +2,7 @@
 
 import posixpath
 
-from sif_context.models import Hit
+from sis_context.models import Hit
 
 RRF_K = 60
 

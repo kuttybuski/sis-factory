@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 import httpx
 
-from sif_contracts import digest
+from sis_contracts import digest
 
 log = logging.getLogger("orchestrator_worker")
 
@@ -32,7 +32,7 @@ async def open_due_digests(portal: httpx.AsyncClient, broker: httpx.AsyncClient,
             old = await repo_file(broker, repo, base, path, team)
             today = datetime.now(UTC).date()
             pr = await broker.post("/v1/publish", json={
-                "repo": repo, "base_commit": base, "branch": f"sif/knowledge-{today.isoformat()}-{d['id']}", "patch": digest.file_patch(path, old, digest.append_lessons(old or "", lessons)),
+                "repo": repo, "base_commit": base, "branch": f"sis/knowledge-{today.isoformat()}-{d['id']}", "patch": digest.file_patch(path, old, digest.append_lessons(old or "", lessons)),
                 "title": digest.title(repo, len(lessons), today), "body": digest.pr_body(lessons, path), "base_branch": ref, "draft": False, "team": team})
             if pr.status_code >= 300:
                 raise RuntimeError(f"git-broker {pr.status_code}: {pr.text[:300]}")

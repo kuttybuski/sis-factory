@@ -10,8 +10,8 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from sif_contracts import posture
-from sif_contracts.events import FactoryEvent
+from sis_contracts import posture
+from sis_contracts.events import FactoryEvent
 
 from portal_api import connections, db, handling, intake, knowledge, learning, security, teams, vault, workflows
 from portal_api.auth import dashboard_guard, pool, write_guard
@@ -33,10 +33,10 @@ hub = Hub()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    posture.enforce("portal-api")  # SIF_ENV=production: refuse to start with unsafe settings (sif_contracts.posture)
+    posture.enforce("portal-api")  # SIS_ENV=production: refuse to start with unsafe settings (sis_contracts.posture)
     app.state.pool = pool = await db.open_pool(os.environ["DATABASE_URL"])
     if moved := await vault.reencrypt(pool):
-        print(f"re-encrypted {moved} connection secret(s) with the current SIF_SECRET_KEY", flush=True)
+        print(f"re-encrypted {moved} connection secret(s) with the current SIS_SECRET_KEY", flush=True)
     loops = [asyncio.create_task(learning.improve_forever(pool)), asyncio.create_task(purge_forever(pool))]
     yield
     for loop in loops:
@@ -45,8 +45,8 @@ async def lifespan(app: FastAPI):
 
 
 async def purge_forever(p) -> None:
-    """Retention, once a day: event payloads of finished tasks after SIF_RETENTION_DAYS, audit rows after SIF_AUDIT_RETENTION_DAYS (0 = keep)."""
-    event_days, audit_days = int(os.environ.get("SIF_RETENTION_DAYS") or 0), int(os.environ.get("SIF_AUDIT_RETENTION_DAYS") or 0)  # unset: keep
+    """Retention, once a day: event payloads of finished tasks after SIS_RETENTION_DAYS, audit rows after SIS_AUDIT_RETENTION_DAYS (0 = keep)."""
+    event_days, audit_days = int(os.environ.get("SIS_RETENTION_DAYS") or 0), int(os.environ.get("SIS_AUDIT_RETENTION_DAYS") or 0)  # unset: keep
     if event_days <= 0 and audit_days <= 0:
         return
     while True:
@@ -59,7 +59,7 @@ async def purge_forever(p) -> None:
         await asyncio.sleep(86400)
 
 
-app = FastAPI(title="sif portal-api", lifespan=lifespan)
+app = FastAPI(title="sis portal-api", lifespan=lifespan)
 app.include_router(connections.router)
 app.include_router(teams.router)
 app.include_router(knowledge.router)
@@ -76,12 +76,12 @@ UNAUDITED = ("/api/events", "/api/kill-requests/handled", "/api/eval/runs/claim"
 
 @app.middleware("http")
 async def audit(request: Request, call_next):
-    """Every change made through the API, by whom, and whether it was allowed. The dashboard sends the signed-in user as X-Sif-Actor;
+    """Every change made through the API, by whom, and whether it was allowed. The dashboard sends the signed-in user as X-Sis-Actor;
     services send nothing and are recorded as 'service'. Refused attempts (401, 403, 409, ...) are recorded too."""
     response = await call_next(request)
     path = request.url.path
     if request.method not in ("GET", "HEAD", "OPTIONS") and path.startswith("/api/") and path not in UNAUDITED:
-        actor = (request.headers.get("x-sif-actor") or "service")[:200]
+        actor = (request.headers.get("x-sis-actor") or "service")[:200]
         # Also one JSON line on stdout, for the log shipper to forward to the SIEM: a copy outside the database it describes.
         print(json.dumps({"audit": {"at": datetime.now(UTC).isoformat(), "actor": actor, "method": request.method, "path": path[:500],
                                     "status": response.status_code}}), flush=True)
@@ -190,7 +190,7 @@ async def answer(task_id: str, body: AnswerIn, p=Depends(pool)):
         raise HTTPException(404, "task not found")
     if found["task"]["stage"] != "asking":
         raise HTTPException(409, "the task is not waiting for a reply")
-    url, token = os.environ.get("JIRA_CONNECTOR_URL", "http://jira-connector:8080"), os.environ.get("SIF_INTERNAL_TOKEN", "")
+    url, token = os.environ.get("JIRA_CONNECTOR_URL", "http://jira-connector:8080"), os.environ.get("SIS_INTERNAL_TOKEN", "")
     try:
         async with httpx.AsyncClient(timeout=30, headers={"Authorization": f"Bearer {token}"}) as c:
             r = await c.post(f"{url}/v1/answer", json={"key": found["task"]["jira_key"], "text": body.text, "by": body.by})

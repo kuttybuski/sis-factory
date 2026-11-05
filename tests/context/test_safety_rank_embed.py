@@ -1,10 +1,10 @@
 import math
 
 import pytest
-from sif_context.embed import HashEmbedder, HttpEmbedder, vector_literal
-from sif_context.models import Chunk, Hit
-from sif_context.rank import boost, dedupe_per_doc, keyword_query, path_overlap, rrf
-from sif_context.safety import screen
+from sis_context.embed import HashEmbedder, HttpEmbedder, vector_literal
+from sis_context.models import Chunk, Hit
+from sis_context.rank import boost, dedupe_per_doc, keyword_query, path_overlap, rrf
+from sis_context.safety import screen
 
 GH = "ghp_" + "a1B2" * 9  # assembled so this file does not look like a leaked secret
 

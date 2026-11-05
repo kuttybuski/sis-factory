@@ -4,8 +4,8 @@ import logging
 
 import httpx
 
-from sif_contracts.namespaces import DEFAULT, Namespaces
-from sif_contracts.workflow import EVAL_WORKFLOW, ORCHESTRATOR_QUEUE, EvalCase, EvalInput
+from sis_contracts.namespaces import DEFAULT, Namespaces
+from sis_contracts.workflow import EVAL_WORKFLOW, ORCHESTRATOR_QUEUE, EvalCase, EvalInput
 
 log = logging.getLogger("orchestrator_worker")
 

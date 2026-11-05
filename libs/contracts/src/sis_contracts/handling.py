@@ -120,7 +120,7 @@ ROLE_PROMPTS = {
         "components and files affected, interfaces and data changes, risks, and a test plan. Another agent will implement it, so be specific "
         "enough to build from. Do not write production code and do not change any other file."),
     "developer": (
-        "Your role: developer. Implement the ticket. If intent.md or design.md are present under docs/sif/<ticket>/, follow them; if you must "
+        "Your role: developer. Implement the ticket. If intent.md or design.md are present under docs/sis/<ticket>/, follow them; if you must "
         "deviate, say why in your final summary. Keep those documents unchanged."),
 }
 
@@ -134,7 +134,7 @@ def guidance_for(role: str, instructions: str = "") -> str:
 
 
 def docs_dir(jira_key: str) -> str:
-    return f"docs/sif/{jira_key}"
+    return f"docs/sis/{jira_key}"
 
 
 def parse_split(text: str, limit: int = MAX_CHILDREN) -> list[dict[str, str]] | str:

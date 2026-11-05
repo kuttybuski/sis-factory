@@ -9,8 +9,8 @@ import random
 import sys
 import time
 
-from sif_contracts.events import EventType as T
-from sif_contracts.events import FactoryEvent
+from sis_contracts.events import EventType as T
+from sis_contracts.events import FactoryEvent
 
 from portal_api import db
 

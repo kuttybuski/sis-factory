@@ -7,9 +7,9 @@ from collections.abc import AsyncIterator
 
 import httpx
 
-from sif_context.models import DocIn
-from sif_context.pr import Comment, FileChange, PRData, ReviewComment, pr_to_doc
-from sif_context.text import md_to_chunks
+from sis_context.models import DocIn
+from sis_context.pr import Comment, FileChange, PRData, ReviewComment, pr_to_doc
+from sis_context.text import md_to_chunks
 
 API = "https://api.github.com"
 DOC_GLOBS = ["README*", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING*", "ARCHITECTURE*", "CODEOWNERS", ".github/CODEOWNERS", "docs/**/*.md", "docs/*.md", "adr/**/*.md", "doc/adr/**/*.md"]

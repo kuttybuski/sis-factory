@@ -1,12 +1,12 @@
 """Secrets from files. Every secret setting can also be given as NAME_FILE, the path of a file holding it: what Kubernetes Secrets,
 External Secrets, Vault Agent and Docker/Podman secrets mount. The file wins over nothing; a value set directly wins over the file.
 
-load_secret_files() runs when sif_contracts is imported, so every Python service reads NAME as before."""
+load_secret_files() runs when sis_contracts is imported, so every Python service reads NAME as before."""
 
 import os
 from pathlib import Path
 
-SECRETS = ("SIF_INGEST_TOKEN", "SIF_INTERNAL_TOKEN", "SIF_DASHBOARD_TOKEN", "SIF_SECRET_KEY", "SIF_SECRET_KEYS_OLD", "GITHUB_TOKEN",
+SECRETS = ("SIS_INGEST_TOKEN", "SIS_INTERNAL_TOKEN", "SIS_DASHBOARD_TOKEN", "SIS_SECRET_KEY", "SIS_SECRET_KEYS_OLD", "GITHUB_TOKEN",
            "GITHUB_APP_PRIVATE_KEY", "JIRA_API_TOKEN", "CONFLUENCE_TOKEN", "LLM_API_KEY", "ANTHROPIC_API_KEY", "EMBEDDINGS_API_KEY",
            "POSTGRES_PASSWORD", "DATABASE_URL")
 

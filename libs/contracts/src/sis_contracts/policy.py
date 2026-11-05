@@ -3,7 +3,7 @@
 import re
 from enum import StrEnum
 
-from sif_contracts.settings import Settings
+from sis_contracts.settings import Settings
 
 
 class Decision(StrEnum):

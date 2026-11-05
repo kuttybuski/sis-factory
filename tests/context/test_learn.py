@@ -1,4 +1,4 @@
-from sif_context.learn import (EvalReport, ReviewNote, calibrate_budgets, candidate_sentences, mine_review_lessons, passes_gate, percentile,
+from sis_context.learn import (EvalReport, ReviewNote, calibrate_budgets, candidate_sentences, mine_review_lessons, passes_gate, percentile,
                                qa_pairs_from_events, summarize_failures)
 
 
@@ -8,14 +8,14 @@ def ev(type, text=None, **kw):
 
 def test_qa_pairs_match_each_question_with_the_next_answer():
     pairs = qa_pairs_from_events("PAY-1", [
-        ev("agent.asked_question", "Which module is canonical?", reason="question"), ev("agent.answered", "@sif Use billing/address.py."),
+        ev("agent.asked_question", "Which module is canonical?", reason="question"), ev("agent.answered", "@sis Use billing/address.py."),
         ev("agent.asked_question", "Backoff or fixed delay?"), ev("agent.answered", "Backoff"),
     ])
     assert [(p.question, p.answer) for p in pairs] == [("Which module is canonical?", "Use billing/address.py."), ("Backoff or fixed delay?", "Backoff")]
 
 
 def test_budget_questions_and_unanswered_questions_are_not_knowledge():
-    assert qa_pairs_from_events("T", [ev("agent.asked_question", "Budget reached", reason="budget"), ev("agent.answered", "@sif approve")]) == []
+    assert qa_pairs_from_events("T", [ev("agent.asked_question", "Budget reached", reason="budget"), ev("agent.answered", "@sis approve")]) == []
     assert qa_pairs_from_events("T", [ev("agent.asked_question", "Which?"), ev("wait.timed_out"), ev("agent.answered", "late answer")]) == []
 
 

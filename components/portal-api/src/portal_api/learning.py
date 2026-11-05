@@ -1,4 +1,4 @@
-"""Learning: lessons ("@sif remember ..."), the replay benchmark that judges them, the daily knowledge PR, the self-improvement cycle,
+"""Learning: lessons ("@sis remember ..."), the replay benchmark that judges them, the daily knowledge PR, the self-improvement cycle,
 and what history says about failures and budgets."""
 
 import asyncio
@@ -9,9 +9,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from injection_guard import Verdict, check_outbound, scan
-from sif_contracts import knowledge as K
-from sif_contracts import lessons as L
-from sif_context.learn import EvalReport, calibrate_budgets, passes_gate, summarize_failures
+from sis_contracts import knowledge as K
+from sis_contracts import lessons as L
+from sis_context.learn import EvalReport, calibrate_budgets, passes_gate, summarize_failures
 
 from portal_api import db, improve, knowledge, settings
 from portal_api.auth import dashboard_guard, pool, write_guard
@@ -99,7 +99,7 @@ def _moved(row):
 async def approve_lesson(lesson_id: int, who: Actor | None = None, p=Depends(pool)):
     lesson = await db.get_lesson(p, lesson_id)
     if lesson and lesson["scope"] == "global" and settings.lesson_global_requires_eval and lesson["eval_status"] != "passed":
-        raise HTTPException(409, "global lessons need a passed eval report first (SIF_LESSON_GLOBAL_REQUIRES_EVAL)")
+        raise HTTPException(409, "global lessons need a passed eval report first (SIS_LESSON_GLOBAL_REQUIRES_EVAL)")
     return _moved(await db.transition_lesson(p, lesson_id, to="approved", allowed_from=("candidate",), by=(who or Actor()).by))
 
 
@@ -119,7 +119,7 @@ async def disable_lesson(lesson_id: int, who: Actor | None = None, p=Depends(poo
 async def relevant_lessons(repo: str | None = None, team: str | None = None, paths: str = "", q: str = "", record_use: bool = False,
                            task_id: str | None = None, include: int | None = None, exclude: int | None = None, p=Depends(pool)):
     """Approved, in-scope lessons for a task, ready to place in the agent's trusted rules block. With a task_id, machine-proposed lessons are
-    withheld from a random share of tasks (SIF_LESSON_HOLDOUT_PCT) and both groups are recorded, so the improvement cycle can measure them.
+    withheld from a random share of tasks (SIS_LESSON_HOLDOUT_PCT) and both groups are recorded, so the improvement cycle can measure them.
     include / exclude are for replays: the lesson under test is forced in (even as a candidate) or kept out."""
     rows = await db.approved_lessons(p)
     fields = ("id", "text", "scope", "scope_value", "repo", "status", "created_at", "expires_at", "use_count", "source")
@@ -193,7 +193,7 @@ async def request_replay(p, lesson_id: int, by: str) -> dict[str, Any]:
 
 @router.post("/api/lessons/{lesson_id}/replay", status_code=201, dependencies=[Depends(dashboard_guard)])
 async def replay_lesson(lesson_id: int, who: Actor | None = None, p=Depends(pool)):
-    """Replays recent merged tickets in the lesson's scope twice, with and without it. Costs up to 2 x cases x SIF_EVAL_BUDGET_USD."""
+    """Replays recent merged tickets in the lesson's scope twice, with and without it. Costs up to 2 x cases x SIS_EVAL_BUDGET_USD."""
     return await request_replay(p, lesson_id, (who or Actor()).by)
 
 
@@ -232,7 +232,7 @@ async def eval_runs(lesson_id: int | None = None, p=Depends(pool)):
 # ---------------------------------------------------------------- the daily knowledge PR
 @router.post("/api/digests/claim", dependencies=[Depends(write_guard)])
 async def claim_digests(p=Depends(pool)):
-    """orchestrator-worker asks which repositories are due a knowledge PR (SIF_DIGEST_HOURS) and opens them."""
+    """orchestrator-worker asks which repositories are due a knowledge PR (SIS_DIGEST_HOURS) and opens them."""
     return [] if settings.digest_hours <= 0 else await db.claim_digests(p, every_hours=settings.digest_hours)
 
 
@@ -279,7 +279,7 @@ async def run_improvement(p, trigger: str) -> dict[str, Any]:
 
     async def replay(lesson_id: int) -> dict[str, Any] | None:
         try:
-            return await request_replay(p, lesson_id, "sif-improve")
+            return await request_replay(p, lesson_id, "sis-improve")
         except HTTPException:
             return None  # no cases yet, or already running
 
@@ -287,7 +287,7 @@ async def run_improvement(p, trigger: str) -> dict[str, Any]:
 
 
 async def improve_forever(p) -> None:
-    """The cycle on a timer (SIF_IMPROVE_MINUTES). It only proposes lessons and retires machine-proposed ones that measurably hurt;
+    """The cycle on a timer (SIS_IMPROVE_MINUTES). It only proposes lessons and retires machine-proposed ones that measurably hurt;
     everything else it finds is a proposal on the Learning page for a person to act on."""
     if settings.improve_minutes <= 0:
         return

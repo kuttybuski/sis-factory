@@ -1,6 +1,6 @@
 # Notes for AI coding agents
 
-SIF is a software factory: it picks up Jira tickets, has a coding agent change the code in a locked-down sandbox, and opens a draft pull
+SIS is a software factory: it picks up Jira tickets, has a coding agent change the code in a locked-down sandbox, and opens a draft pull
 request for people to review. Read this before changing anything. People setting up the app should read docs/running.md instead.
 
 ## Layout
@@ -31,7 +31,7 @@ reference screenshots: only for an intended visual change, and look at every cha
 A developer's `.env` can hold real Jira, GitHub and model credentials, and `make up` runs against them.
 
 - Do not edit `.env`, and do not run `make init` against it, unless the person asks. Show the change instead.
-- Do not turn off dry run (`SIF_DRY_RUN`), switch the agent (`SIF_AGENT`), or set `SIF_ENV=production` on someone's stack unasked.
+- Do not turn off dry run (`SIS_DRY_RUN`), switch the agent (`SIS_AGENT`), or set `SIS_ENV=production` on someone's stack unasked.
 - Do not create Jira issues, comments or labels, GitHub branches or PRs, teams, connections or lessons on a live stack to test something.
   Read-only calls are fine. Test writes against the fakes in `tests/` or the e2e mocks (`make e2e`).
 - Browser checks of the 3D view use made-up data (Playwright route interception or a fake EventSource), as in `tests/3d-view/visual`.
@@ -48,11 +48,11 @@ A developer's `.env` can hold real Jira, GitHub and model credentials, and `make
   passes git-broker's `screen()`. Do not add a path around either.
 - **Jira comments are for people.** Post with `self.jira(...)` only for what someone must act on or for an outcome; progress goes to
   `self.note(...)` (the task's log, the 3D view and the Temporal `logs` query).
-- **Production checks.** `libs/contracts/src/sif_contracts/posture.py` makes services refuse to start with unsafe settings when
-  `SIF_ENV=production`. A new security-relevant setting gets a check there and a line in docs/security.md.
+- **Production checks.** `libs/contracts/src/sis_contracts/posture.py` makes services refuse to start with unsafe settings when
+  `SIS_ENV=production`. A new security-relevant setting gets a check there and a line in docs/security.md.
 - **SQL.** portal-api uses raw SQL through psycopg. Interpolate only fixed strings; every value is a parameter (`%s`).
 - **Settings that reach the browser.** The 3D view gets an explicit allowlist from `vite.config.ts`. Never widen it to a prefix:
-  `SIF_` also covers the tokens.
+  `SIS_` also covers the tokens.
 
 ## Style
 

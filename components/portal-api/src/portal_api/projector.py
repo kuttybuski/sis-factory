@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from sif_contracts.events import REVIEW_EVENTS, EventType, FactoryEvent
+from sis_contracts.events import REVIEW_EVENTS, EventType, FactoryEvent
 
 # pr_opened means "in review": the factory still follows the PR, but only review events move the task on from there (to merged or closed,
 # or back through a revision round). A revision that fails leaves the task failed until its pr.updated puts it back in review.

@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from sif_contracts.namespaces import DEFAULT, NamespaceWorkers, check_namespace, namespace_for, namespaces_of
+from sis_contracts.namespaces import DEFAULT, NamespaceWorkers, check_namespace, namespace_for, namespaces_of
 
 
 @pytest.mark.parametrize("team, ns", [("Payments", "payments"), ("Mobile Apps", "mobile-apps"), ("  R&D / UK ", "r-d-uk"), ("!!!", "")])
@@ -102,7 +102,7 @@ async def test_a_namespace_is_registered_once_on_a_real_server():
     import os
     import uuid
 
-    from sif_contracts.namespaces import Namespaces
+    from sis_contracts.namespaces import Namespaces
 
     name = f"t-{uuid.uuid4().hex[:12]}"
     first, second = Namespaces(os.environ["TEMPORAL_ADDRESS"]), Namespaces(os.environ["TEMPORAL_ADDRESS"])

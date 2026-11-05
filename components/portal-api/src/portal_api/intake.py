@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 import dataclasses
 import os
 
-from sif_contracts.intake import ALL, Limits, held_back
+from sis_contracts.intake import ALL, Limits, held_back
 
 from portal_api import db
 from portal_api.auth import dashboard_guard, pool

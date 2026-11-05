@@ -33,9 +33,9 @@ export function tick(state: FactoryState, rand: () => number, now: number, seq: 
   const active = Object.values(state.tasks).filter((t) => !TERMINAL.has(t.stage))
 
   if (active.length < 8 && rand() < 0.5) {
-    const key = `SIF-${100 + seq}`
+    const key = `SIS-${100 + seq}`
     events.push({ type: 'task.discovered', taskId: key, jiraKey: key, title: pick(TITLES), ts: now })
-    events.push(log(key, now, 'jira', `Label "sif" found on ${key}; swapped to "sif-picked"`))
+    events.push(log(key, now, 'jira', `Label "sis" found on ${key}; swapped to "sis-picked"`))
   }
 
   for (const t of active) {
@@ -45,7 +45,7 @@ export function tick(state: FactoryState, rand: () => number, now: number, seq: 
     if (t.stage === 'asking' && t.waitDeadline !== null && now >= t.waitDeadline) {
       events.push({ type: 'wait.timed_out', taskId: t.id, text: 'No reply before the deadline.', ts: now })
       events.push(log(t.id, now, 'temporal', 'No reply before the deadline; sandbox killed'))
-      events.push(log(t.id, now, 'jira', 'Commented on Jira and set label "sif-timed-out"'))
+      events.push(log(t.id, now, 'jira', 'Commented on Jira and set label "sis-timed-out"'))
       continue
     }
 
@@ -103,7 +103,7 @@ export function tick(state: FactoryState, rand: () => number, now: number, seq: 
           events.push({ type: 'task.failed', taskId: id, text: 'The agent reported a failure: tests still failing after 2 CI rounds.', ts: now })
           events.push(log(id, now, 'claude', 'Error: tests still failing after 2 CI rounds; handing off'))
         } else {
-          events.push({ type: 'publish.started', taskId: id, text: `sif/${id}`, ts: now })
+          events.push({ type: 'publish.started', taskId: id, text: `sis/${id}`, ts: now })
           events.push(log(id, now, 'gateway', 'git-broker: checking protected paths, size, secrets and branch protection'))
         }
         break

@@ -42,7 +42,7 @@ def test_guidance_tells_the_model_how_to_treat_untrusted_blocks():
 
 def test_canary_is_added_and_detected_even_when_split_by_whitespace():
     prompt, canary = with_canary("You are an agent.")
-    assert canary in prompt and canary.startswith("SIFCANARY-")
+    assert canary in prompt and canary.startswith("SISCANARY-")
     assert leaked(f"here: {canary}", [canary]) == [canary]
     assert leaked(" ".join(canary), [canary]) == [canary]
     assert leaked("nothing to see", [canary]) == []

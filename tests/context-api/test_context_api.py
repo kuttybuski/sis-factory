@@ -24,8 +24,8 @@ def client():
 
 
 def index(client, docs):
-    from sif_context import db
-    from sif_context.models import Chunk, DocIn
+    from sis_context import db
+    from sis_context.models import Chunk, DocIn
 
     async def run(pool=client.app.state.pool, emb=client.app.state.embedder):
         src = await db.upsert_source(pool, kind="push", key=f"api-test-{docs[0][0]}", team=TEAM)

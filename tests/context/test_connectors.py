@@ -2,7 +2,7 @@ import base64
 
 import httpx
 import pytest
-from sif_context import confluence, github
+from sis_context import confluence, github
 
 BASE = "https://acme.atlassian.net"
 

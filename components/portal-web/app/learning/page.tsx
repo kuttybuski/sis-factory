@@ -96,7 +96,7 @@ function KnowledgePRs({ digests, imp }: { digests: Digest[]; imp: Improvement })
       <div className="sub">
         {imp.digest_hours > 0
           ? <>At most once every {imp.digest_hours} hours per repository, its new candidate lessons go into one pull request that adds them to <code>{imp.digest_file}</code>. Merging adopts them; deleting a line rejects that lesson; closing rejects the batch.</>
-          : <>Off (<code>SIF_DIGEST_HOURS=0</code>): candidate lessons are approved one by one below.</>}
+          : <>Off (<code>SIS_DIGEST_HOURS=0</code>): candidate lessons are approved one by one below.</>}
       </div>
       {digests.length === 0 ? <div className="empty">No knowledge PRs yet.</div> : (
         <table>
@@ -156,7 +156,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
     <>
       <h1>Learning{team && <small className="soft"> · {team}</small>}</h1>
       <div className="sub">
-        Rules the agent follows: taught by the team with <code>@sif remember …</code>, or mined by the factory from what reviewers, CI and
+        Rules the agent follows: taught by the team with <code>@sis remember …</code>, or mined by the factory from what reviewers, CI and
         people's own fixes kept correcting. Only approved lessons reach the agent, and they are placed in a trusted block, so review each one
         as if you were writing it into the agent's instructions.
       </div>
@@ -226,7 +226,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
 
       <div className="panel glass">
         <h2>Suggested budgets</h2>
-        <div className="sub">From what tasks that opened a PR actually cost (90 days). Suggestions only: change <code>SIF_MAX_BUDGET_USD</code> yourself.</div>
+        <div className="sub">From what tasks that opened a PR actually cost (90 days). Suggestions only: change <code>SIS_MAX_BUDGET_USD</code> yourself.</div>
         {budgets.length === 0 ? <div className="empty">Not enough history.</div> : (
           <table>
             <thead><tr><th>Team</th><th className="num">Tasks</th><th className="num">PR rate</th><th className="num">Typical</th><th className="num">p90</th><th className="num">Suggested</th><th>Note</th></tr></thead>

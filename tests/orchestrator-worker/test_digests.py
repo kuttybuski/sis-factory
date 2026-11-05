@@ -45,8 +45,8 @@ async def test_a_due_repository_gets_one_pr_that_adds_its_lessons_to_claude_md()
     portal, broker, seen = fakes({(BASE, "CLAUDE.md"): "# Project\n"})
     assert await open_due_digests(portal, broker) == 1
     pub = next(b for who, path, b in seen if path == "/v1/publish")
-    assert pub["branch"].startswith("sif/knowledge-") and pub["branch"].endswith("-5") and pub["base_commit"] == BASE and pub["team"] == "Payments"
-    assert "+- Use Decimal for money. _(sif L11)_" in pub["patch"] and "--- a/CLAUDE.md" in pub["patch"] and not pub["draft"]
+    assert pub["branch"].startswith("sis/knowledge-") and pub["branch"].endswith("-5") and pub["base_commit"] == BASE and pub["team"] == "Payments"
+    assert "+- Use Decimal for money. _(sis L11)_" in pub["patch"] and "--- a/CLAUDE.md" in pub["patch"] and not pub["draft"]
     assert "1 lesson learned in acme/api" in pub["title"] and "**L11**" in pub["body"]
     assert ("portal", "/api/digests/5/opened", {"pr_number": 9, "pr_url": "https://x/pull/9", "branch": pub["branch"]}) in seen
 
@@ -66,7 +66,7 @@ async def test_a_pr_that_cannot_be_opened_puts_the_lessons_back():
 
 async def test_a_merged_pr_reports_which_lessons_survived_review():
     head = "h" * 40
-    merged = "# Project\n<!-- sif:lessons:start -->\n- kept _(sif L11)_\n<!-- sif:lessons:end -->\n"
+    merged = "# Project\n<!-- sis:lessons:start -->\n- kept _(sis L11)_\n<!-- sis:lessons:end -->\n"
     portal, broker, seen = fakes({(head, "CLAUDE.md"): merged}, pr_state={"state": "merged", "merged_by": "rae", "head_sha": head})
     assert await check_open_digests(portal, broker) == 1
     assert ("portal", "/api/digests/5/decided", {"state": "merged", "merged_by": "rae", "kept_ids": [11]}) in seen

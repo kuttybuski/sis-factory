@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from sif_context.embed import HashEmbedder
+from sis_context.embed import HashEmbedder
 
 BACKEND = os.environ.get("EMBEDDINGS_BACKEND", "fastembed")
 MODEL = os.environ.get("EMBEDDINGS_MODEL", "BAAI/bge-small-en-v1.5")
@@ -49,7 +49,7 @@ async def lifespan(_: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="sif embeddings", lifespan=lifespan)
+app = FastAPI(title="sis embeddings", lifespan=lifespan)
 
 
 class EmbeddingsRequest(BaseModel):

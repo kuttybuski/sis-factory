@@ -36,10 +36,10 @@ text cannot argue with them.
 
 ## What is not covered yet
 
-- **One write token per service.** The services share `SIF_INGEST_TOKEN`. One could post another's events or propose lessons under
+- **One write token per service.** The services share `SIS_INGEST_TOKEN`. One could post another's events or propose lessons under
   another's name, though not approve them. Plan: per-service tokens or mTLS on Kubernetes.
 - **Lesson author roles.** A lesson from Jira carries the role jira-connector resolved (lead, maintainer). portal-api trusts that role, so
-  a leaked service token could add an auto-approved lesson. Mitigation today: `SIF_LESSON_AUTO_APPROVE=false`.
+  a leaked service token could add an auto-approved lesson. Mitigation today: `SIS_LESSON_AUTO_APPROVE=false`.
 - **High availability.** The Compose stack runs one of each service on one host. The Kubernetes pieces are on docs/roadmap.md.
 - **Data-loss prevention for model traffic.** Text sent to `LLM_UPSTREAM_URL` is not scanned for personal data on the way out; keep the
   endpoint inside your network.

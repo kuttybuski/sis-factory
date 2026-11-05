@@ -8,17 +8,17 @@ from datetime import UTC, datetime
 
 import httpx
 
-from sif_contracts import digest
+from sis_contracts import digest
 
 from orchestrator_worker.digests import repo_file
 
 log = logging.getLogger("orchestrator_worker")
 
-LOG_FILE = ".sif/security/injection-log.md"
-BLOCKLIST = ".sif/security/blocklist.txt"
-LOG_HEAD = ("# Prompt-injection attempts\n\nText the SIF factory did not pass to its agents because it looked like an attempt to instruct them. "
+LOG_FILE = ".sis/security/injection-log.md"
+BLOCKLIST = ".sis/security/blocklist.txt"
+LOG_HEAD = ("# Prompt-injection attempts\n\nText the SIS factory did not pass to its agents because it looked like an attempt to instruct them. "
             "The text is not copied here; follow the Jira key to read it.\n")
-BLOCK_HEAD = ("# Fingerprints the SIF factory always blocks for this team, whatever its rules score. One per line, from merged security PRs.\n"
+BLOCK_HEAD = ("# Fingerprints the SIS factory always blocks for this team, whatever its rules score. One per line, from merged security PRs.\n"
               "# Delete a line (in a PR) to stop blocking it.\n")
 VERDICT = {"block": "blocked", "flag": "flagged"}
 WHERE = {"jira_ticket": "ticket text", "jira_comment": "a reply on Jira or in the 3D view", "pr_review": "a pull-request review comment"}
@@ -68,7 +68,7 @@ async def open_due_security_prs(portal: httpx.AsyncClient, broker: httpx.AsyncCl
                      + digest.file_patch(BLOCKLIST, old_block, (old_block or BLOCK_HEAD) + "".join(block_line(i) for i in incidents if i["fingerprint"] not in known)))
             today = datetime.now(UTC).date()
             pr = await broker.post("/v1/publish", json={
-                "repo": repo, "base_commit": base, "branch": f"sif/security-{today.isoformat()}-{ids[0]}", "patch": patch,
+                "repo": repo, "base_commit": base, "branch": f"sis/security-{today.isoformat()}-{ids[0]}", "patch": patch,
                 "title": f"Security: {len(incidents)} prompt-injection attempt{'s' if len(incidents) != 1 else ''} caught ({today.isoformat()})",
                 "body": pr_body(team, incidents), "base_branch": ref, "draft": False, "team": team})
             if pr.status_code >= 300:

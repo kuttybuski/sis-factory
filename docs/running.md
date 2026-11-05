@@ -82,8 +82,8 @@ The factory runs inside WSL 2 (a Linux system built into Windows). Your Windows 
 
 4. In Ubuntu, follow the **Linux → Ubuntu** steps above, including `systemctl --user enable --now podman.socket`.
 
-5. Keep the repository inside Linux (`~/sif`), not under `/mnt/c/...`. Builds on the Windows drive are many times slower and file
-   permissions break. Open it from Windows as `\\wsl$\Ubuntu-24.04\home\<you>\sif`, or with VS Code's WSL extension (`code .` in Ubuntu).
+5. Keep the repository inside Linux (`~/sis`), not under `/mnt/c/...`. Builds on the Windows drive are many times slower and file
+   permissions break. Open it from Windows as `\\wsl$\Ubuntu-24.04\home\<you>\sis`, or with VS Code's WSL extension (`code .` in Ubuntu).
 
 Podman Desktop for Windows is not needed. If you already use it, run the commands in its WSL machine the same way.
 
@@ -98,9 +98,9 @@ make up          # builds and starts the stack
 
 Open the dashboard at http://localhost:3000 and the 3D view at http://localhost:5173. Out of the box nothing touches Jira or GitHub:
 
-- **Demo agent.** `SIF_AGENT=scripted` calls no model and costs nothing. It only follows lines like
+- **Demo agent.** `SIS_AGENT=scripted` calls no model and costs nothing. It only follows lines like
   `edit src/app.py: replace "a" with "b"` in a ticket.
-- **Dry run.** `SIF_DRY_RUN=true`: jira-connector reads Jira but only logs what it would do.
+- **Dry run.** `SIS_DRY_RUN=true`: jira-connector reads Jira but only logs what it would do.
 - **Something to look at:** press **Demo** in the 3D view, or `make seed` for sample tasks on the dashboard (open it with `?demo=1`;
   `make unseed` removes them).
 
@@ -110,10 +110,10 @@ Each step changes what the factory does outside your machine, so take them in or
 
 1. **Jira and GitHub.** Fill in `JIRA_*` and `GITHUB_TOKEN` in `.env`, or add a team and its connections on **Admin → Teams** and
    **Admin → Connections** (docs/connections.md). With dry run still on, `make logs s=jira-connector` shows which tickets it would pick up.
-2. **The real agent.** Set `SIF_AGENT=claude`, `INSTALL_CLAUDE=true`, `LLM_UPSTREAM_URL` (for example `https://api.anthropic.com`),
+2. **The real agent.** Set `SIS_AGENT=claude`, `INSTALL_CLAUDE=true`, `LLM_UPSTREAM_URL` (for example `https://api.anthropic.com`),
    `LLM_UPSTREAM_KEY` and `MODEL_IMPLEMENTATION` (default `claude-haiku-5-5`), then `make up`. The key stays in sandbox-gateway;
-   sandboxes never see it. `SIF_MAX_BUDGET_USD` caps the spend per ticket.
-3. **Go live.** Set `SIF_DRY_RUN=false` and `make up`. Tickets labelled `sif` in a team's Jira projects are picked up.
+   sandboxes never see it. `SIS_MAX_BUDGET_USD` caps the spend per ticket.
+3. **Go live.** Set `SIS_DRY_RUN=false` and `make up`. Tickets labelled `sis` in a team's Jira projects are picked up.
 
 Before anyone else uses the dashboard, follow docs/security.md, "Running in production": sign-in, a GitHub App and protected branches.
 

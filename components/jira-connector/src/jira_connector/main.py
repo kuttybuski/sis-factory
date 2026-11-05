@@ -10,11 +10,11 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 from temporalio.worker import Worker
 
-from sif_contracts import posture
-from sif_contracts import Settings
-from sif_contracts.connections import Credentials
-from sif_contracts.namespaces import NamespaceWorkers, Namespaces, namespaces_of, team_namespaces
-from sif_contracts.workflow import JIRA_QUEUE
+from sis_contracts import posture
+from sis_contracts import Settings
+from sis_contracts.connections import Credentials
+from sis_contracts.namespaces import NamespaceWorkers, Namespaces, namespaces_of, team_namespaces
+from sis_contracts.workflow import JIRA_QUEUE
 
 from jira_connector import activities
 from jira_connector.client import DryRunJira, JiraClient
@@ -58,22 +58,22 @@ async def loop(name: str, every: float, fn, state: dict) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    posture.enforce("jira-connector")  # SIF_ENV=production: refuse to start with unsafe settings (sif_contracts.posture)
+    posture.enforce("jira-connector")  # SIS_ENV=production: refuse to start with unsafe settings (sis_contracts.posture)
     env = dict(os.environ)
-    dry = env.get("SIF_DRY_RUN", "false").lower() in ("1", "true", "yes")
+    dry = env.get("SIS_DRY_RUN", "false").lower() in ("1", "true", "yes")
     wrap = (lambda c: DryRunJira(c, log.info)) if dry else (lambda c: c)
     # The shared account from the environment covers every project that no team has its own connection for.
     shared = wrap(JiraClient(env["JIRA_BASE_URL"], env.get("JIRA_EMAIL", ""), env.get("JIRA_API_TOKEN", ""))) if env.get("JIRA_BASE_URL") else None
     portal_url = env.get("PORTAL_API_URL", "http://portal-api:8000")
-    credentials = Credentials(portal_url, env["SIF_INTERNAL_TOKEN"], ttl=Settings().connection_cache_seconds) if env.get("SIF_INTERNAL_TOKEN") else None
+    credentials = Credentials(portal_url, env["SIS_INTERNAL_TOKEN"], ttl=Settings().connection_cache_seconds) if env.get("SIS_INTERNAL_TOKEN") else None
     router = JiraRouter(shared=shared, credentials=credentials, wrap=wrap)
     cfg = Config.from_env(env)
-    portal = httpx.AsyncClient(base_url=portal_url, headers={"Authorization": f"Bearer {env.get('SIF_INGEST_TOKEN', '')}"}, timeout=15)
+    portal = httpx.AsyncClient(base_url=portal_url, headers={"Authorization": f"Bearer {env.get('SIS_INGEST_TOKEN', '')}"}, timeout=15)
     activities.set_client(router)
     s = Settings()
     namespaces = Namespaces(env.get("TEMPORAL_ADDRESS", "temporal:7233"), s.namespace_retention_days)
     flow, seen, state = TemporalFlow(namespaces), Seen(), {}
-    every = float(env.get("SIF_POLL_SECONDS", "30"))
+    every = float(env.get("SIS_POLL_SECONDS", "30"))
     # Workflows call the Jira activities on JIRA_QUEUE in their own namespace, so a worker runs in every team namespace.
     workers = NamespaceWorkers(namespaces, lambda c: Worker(c, task_queue=JIRA_QUEUE, activities=activities.ALL), lambda: team_namespaces(portal),
                                every=s.namespace_refresh_seconds)
@@ -121,13 +121,13 @@ async def _replies(router, flow, portal, cfg, seen):
         await reply_cycle(sc.client, flow, portal, teams, replace(cfg, bot_account_id=sc.bot_account_id or cfg.bot_account_id), seen, scope=sc.jql)
 
 
-app = FastAPI(title="sif jira-connector", lifespan=lifespan)
+app = FastAPI(title="sis jira-connector", lifespan=lifespan)
 
 
 def internal(authorization: str | None = Header(default=None)) -> None:
-    token = os.environ.get("SIF_INTERNAL_TOKEN", "")
+    token = os.environ.get("SIS_INTERNAL_TOKEN", "")
     if not token:
-        raise HTTPException(503, "SIF_INTERNAL_TOKEN is not configured")
+        raise HTTPException(503, "SIS_INTERNAL_TOKEN is not configured")
     if not secrets.compare_digest((authorization or "").removeprefix("Bearer "), token):
         raise HTTPException(401, "invalid token")
 

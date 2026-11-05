@@ -1,7 +1,7 @@
 """Answered questions as searchable documents, so the next task can find the answer instead of asking again."""
 
-from sif_context.learn import QA
-from sif_context.models import Chunk, DocIn
+from sis_context.learn import QA
+from sis_context.models import Chunk, DocIn
 
 
 def qa_to_doc(qa: QA, index: int, *, team: str | None, repo: str | None, jira_key: str) -> DocIn:

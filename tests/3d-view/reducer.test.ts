@@ -148,8 +148,8 @@ describe('classifiers, Jira hand-back and logs', () => {
 
 describe('live feed parsing', () => {
   it('accepts a valid event and fills in a timestamp', () => {
-    const e = parseEvent('{"type":"task.discovered","taskId":"SIF-1","jiraKey":"SIF-1"}')
-    expect(e?.taskId).toBe('SIF-1')
+    const e = parseEvent('{"type":"task.discovered","taskId":"SIS-1","jiraKey":"SIS-1"}')
+    expect(e?.taskId).toBe('SIS-1')
     expect(typeof e?.ts).toBe('number')
   })
 
@@ -168,7 +168,7 @@ describe('budget pause and wait timeout', () => {
     ])
     expect(asked.tasks.A.waitReason).toBe('budget')
     expect(asked.tasks.A.waitDeadline).toBe(9000)
-    const approved = reduce(asked, ev('agent.answered', 'A', { text: '@sif approve', budgetUsd: 4 }))
+    const approved = reduce(asked, ev('agent.answered', 'A', { text: '@sis approve', budgetUsd: 4 }))
     expect(approved.tasks.A.budgetUsd).toBe(4)
     expect(approved.tasks.A.waitDeadline).toBeNull()
     expect(approved.tasks.A.stage).toBe('running')

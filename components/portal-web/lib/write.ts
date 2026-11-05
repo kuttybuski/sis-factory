@@ -4,12 +4,12 @@ import { redirect } from 'next/navigation'
 import { currentUser } from './auth'
 
 // Writes to portal-api, for server actions only: they carry the dashboard token, which never reaches the browser, and the signed-in user,
-// which portal-api records in its audit log. Each action checks the user's role first (lib/auth.ts authorize). SIF_DASHBOARD_TOKEN is the
+// which portal-api records in its audit log. Each action checks the user's role first (lib/auth.ts authorize). SIS_DASHBOARD_TOKEN is the
 // dashboard's own (people's decisions); without it, local development falls back to the services' ingest token.
 const BASE = process.env.PORTAL_API_URL ?? 'http://portal-api:8000'
 
 function token(): string {
-  for (const name of ['SIF_DASHBOARD_TOKEN', 'SIF_INGEST_TOKEN']) {
+  for (const name of ['SIS_DASHBOARD_TOKEN', 'SIS_INGEST_TOKEN']) {
     if (process.env[name]) return process.env[name] as string
     const file = process.env[`${name}_FILE`]
     if (file) return readFileSync(file, 'utf8').trim()  // mounted from a vault
@@ -30,7 +30,7 @@ export async function write(method: 'POST' | 'PUT' | 'DELETE', path: string, bod
     const actor = (await currentUser())?.email ?? 'unknown'
     const res = await fetch(`${BASE}${path}`, {
       method, cache: 'no-store',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token()}`, 'x-sif-actor': actor },
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token()}`, 'x-sis-actor': actor },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
     if (res.ok) return undefined

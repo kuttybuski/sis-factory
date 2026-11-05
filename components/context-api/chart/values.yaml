@@ -1,5 +1,5 @@
 image:
-  repository: localhost/sif-context-api
+  repository: localhost/sis-context-api
   tag: latest
 replicas: 1
 port: 8080
@@ -7,11 +7,11 @@ env:
   PORTAL_API_URL: "http://portal-api:8000"
   EMBEDDINGS_URL: "http://embeddings:8080"
 # Secrets are never inlined. Create them with your secret manager (see components/secrets) and list them here.
-envFromSecrets: []          # for example [sif-database, sif-integrations]
+envFromSecrets: []          # for example [sis-database, sis-integrations]
 allowFrom:                  # who may call this service
   - namespaceSelector:
       matchLabels:
-        kubernetes.io/metadata.name: sif-platform
+        kubernetes.io/metadata.name: sis-platform
 # Egress: DNS and Postgres only.
 egressPorts: []
 databasePort: 5432

@@ -10,11 +10,11 @@ from sandbox_provisioner.models import SandboxInfo, SandboxSpec
 from sandbox_provisioner.podman import PodmanBackend, create_payload
 
 AUTH = {"Authorization": "Bearer internal-token"}
-IMG = "localhost/sif-agent-runner:latest"
+IMG = "localhost/sis-agent-runner:latest"
 
 
 def spec(**kw):
-    return SandboxSpec(task_id="PAY-1", image=IMG, env={"SIF_GATEWAY_URL": "http://sandbox-gateway:8080", "SIF_TASK_TOKEN": "t"}, **kw)
+    return SandboxSpec(task_id="PAY-1", image=IMG, env={"SIS_GATEWAY_URL": "http://sandbox-gateway:8080", "SIS_TASK_TOKEN": "t"}, **kw)
 
 
 # ---- spec validation
@@ -22,7 +22,7 @@ def test_spec_rejects_unsafe_input():
     for bad in ("../x", "a b", "", "x" * 80, "-lead"):
         with pytest.raises(ValidationError):
             SandboxSpec(task_id=bad, image=IMG)
-    with pytest.raises(ValidationError, match="SIF_"):
+    with pytest.raises(ValidationError, match="SIS_"):
         SandboxSpec(task_id="PAY-1", image=IMG, env={"LD_PRELOAD": "/x.so"})
     with pytest.raises(ValidationError):
         SandboxSpec(task_id="PAY-1", image=IMG, memory_mb=999_999)
@@ -30,12 +30,12 @@ def test_spec_rejects_unsafe_input():
 
 # ---- podman payload
 def test_podman_payload_is_locked_down():
-    p = create_payload(spec(), "sif-sandboxes", now=1000)
+    p = create_payload(spec(), "sis-sandboxes", now=1000)
     assert p["cap_drop"] == ["ALL"] and p["no_new_privileges"] and p["read_only_filesystem"] and p["user"] == "10001:10001"
-    assert p["Networks"] == {"sif-sandboxes": {}} and p["remove"] is True
+    assert p["Networks"] == {"sis-sandboxes": {}} and p["remove"] is True
     assert p["resource_limits"]["memory"]["limit"] == 1024 * 1024 * 1024 and p["resource_limits"]["pids"]["limit"] == 256
     assert {m["destination"] for m in p["mounts"]} == {"/workspace", "/tmp"} and all(m["type"] == "tmpfs" for m in p["mounts"])
-    assert p["labels"]["sif.created"] == "1000" and "privileged" not in p and "oci_runtime" not in p
+    assert p["labels"]["sis.created"] == "1000" and "privileged" not in p and "oci_runtime" not in p
     assert create_payload(spec(), "n", runtime="runsc")["oci_runtime"] == "runsc"
 
 
@@ -56,7 +56,7 @@ def podman_transport(state):
         if req.method == "DELETE":
             return httpx.Response(200 if state.get("created") else 404)
         if path.endswith("/containers/json"):
-            return httpx.Response(200, json=[{"Names": ["sif-sandbox-pay-1"], "State": "running", "Labels": state["created"]["labels"]}] if state.get("created") else [])
+            return httpx.Response(200, json=[{"Names": ["sis-sandbox-pay-1"], "State": "running", "Labels": state["created"]["labels"]}] if state.get("created") else [])
         return httpx.Response(500)
 
     return httpx.MockTransport(handler)
@@ -65,9 +65,9 @@ def podman_transport(state):
 @pytest.mark.asyncio
 async def test_podman_backend_creates_network_once_then_container_and_lists_it():
     state = {"calls": [], "network": False}
-    b = PodmanBackend(httpx.AsyncClient(transport=podman_transport(state), base_url="http://p"), network="sif-sandboxes")
+    b = PodmanBackend(httpx.AsyncClient(transport=podman_transport(state), base_url="http://p"), network="sis-sandboxes")
     info = await b.create(spec())
-    assert info.name == "sif-sandbox-pay-1" and info.status == "running"
+    assert info.name == "sis-sandbox-pay-1" and info.status == "running"
     assert [m for m, p in state["calls"] if p.endswith("/networks/create")] == ["POST"] and state["created"]["image"] == IMG
     assert [s.task_id for s in await b.list()] == ["PAY-1"] and (await b.get("PAY-1")).task_id == "PAY-1"
     assert await b.delete("PAY-1") is True
@@ -83,12 +83,12 @@ async def test_podman_errors_surface_and_missing_deletes_are_quiet():
 
 # ---- kubernetes manifest
 def test_pod_manifest_uses_gvisor_and_is_hardened():
-    m = pod_manifest(spec(), "sif-sandboxes", now=5)
+    m = pod_manifest(spec(), "sis-sandboxes", now=5)
     s, c = m["spec"], m["spec"]["containers"][0]
     assert s["runtimeClassName"] == "gvisor" and s["automountServiceAccountToken"] is False and s["securityContext"]["runAsNonRoot"] is True
     assert c["securityContext"] == {"allowPrivilegeEscalation": False, "readOnlyRootFilesystem": True, "capabilities": {"drop": ["ALL"]}}
-    assert s["activeDeadlineSeconds"] == 14400 and m["metadata"]["namespace"] == "sif-sandboxes" and "hostPath" not in json.dumps(m)
-    assert c["resources"]["limits"]["memory"] == "1024Mi" and {e["name"] for e in c["env"]} == {"SIF_GATEWAY_URL", "SIF_TASK_TOKEN"}
+    assert s["activeDeadlineSeconds"] == 14400 and m["metadata"]["namespace"] == "sis-sandboxes" and "hostPath" not in json.dumps(m)
+    assert c["resources"]["limits"]["memory"] == "1024Mi" and {e["name"] for e in c["env"]} == {"SIS_GATEWAY_URL", "SIS_TASK_TOKEN"}
 
 
 def test_pod_names_are_valid_dns_labels():
@@ -97,7 +97,7 @@ def test_pod_names_are_valid_dns_labels():
 
 def test_manifest_satisfies_the_kyverno_policy_in_this_repo():
     # components/policy requires: gvisor runtime, non-root, no privilege escalation, no service-account token, no hostPath.
-    m = pod_manifest(spec(), "sif-sandboxes")
+    m = pod_manifest(spec(), "sis-sandboxes")
     assert m["spec"]["runtimeClassName"] == "gvisor" and m["spec"]["automountServiceAccountToken"] is False
     assert m["spec"]["securityContext"]["runAsNonRoot"] is True and m["spec"]["containers"][0]["securityContext"]["allowPrivilegeEscalation"] is False
 
@@ -112,11 +112,11 @@ async def test_kube_backend_talks_to_the_pods_api():
             return httpx.Response(201, json={})
         if req.method == "DELETE":
             return httpx.Response(200 if "sandbox-pay-1" in req.url.path else 404, json={})
-        return httpx.Response(200, json={"items": [{"metadata": {"name": "sandbox-pay-1", "labels": {"sif.io/task": "PAY-1"}, "annotations": {"sif.io/created": "5", "sif.io/ttl": "60"}}, "status": {"phase": "Running"}}]})
+        return httpx.Response(200, json={"items": [{"metadata": {"name": "sandbox-pay-1", "labels": {"sis.io/task": "PAY-1"}, "annotations": {"sis.io/created": "5", "sis.io/ttl": "60"}}, "status": {"phase": "Running"}}]})
 
     b = KubeBackend(httpx.AsyncClient(transport=httpx.MockTransport(handler), base_url="https://k"))
     assert (await b.create(spec())).backend == "kubernetes"
-    assert ("POST", "/api/v1/namespaces/sif-sandboxes/pods") in seen
+    assert ("POST", "/api/v1/namespaces/sis-sandboxes/pods") in seen
     assert (await b.list())[0].status == "running" and await b.delete("PAY-1") is True and await b.delete("NOPE-1") is False
 
 
@@ -143,8 +143,8 @@ class Fake:
 
 @pytest.fixture()
 def client(monkeypatch):
-    monkeypatch.setenv("SIF_INTERNAL_TOKEN", "internal-token")
-    monkeypatch.setenv("SIF_REAP_SECONDS", "0")
+    monkeypatch.setenv("SIS_INTERNAL_TOKEN", "internal-token")
+    monkeypatch.setenv("SIS_REAP_SECONDS", "0")
     import importlib
 
     from sandbox_provisioner import main
@@ -157,12 +157,12 @@ def client(monkeypatch):
 
 
 def body(**kw):
-    return {"task_id": "PAY-1", "image": IMG, "env": {"SIF_TASK_TOKEN": "t"}, **kw}
+    return {"task_id": "PAY-1", "image": IMG, "env": {"SIS_TASK_TOKEN": "t"}, **kw}
 
 
 def test_api_needs_the_token(client, monkeypatch):
     assert client.post("/v1/sandboxes", json=body()).status_code == 401
-    monkeypatch.delenv("SIF_INTERNAL_TOKEN")
+    monkeypatch.delenv("SIS_INTERNAL_TOKEN")
     assert client.post("/v1/sandboxes", json=body(), headers=AUTH).status_code == 503
 
 
@@ -177,8 +177,8 @@ def test_api_creates_once_and_deletes_idempotently(client):
 
 def test_only_allowlisted_images_run(client):
     assert client.post("/v1/sandboxes", json=body(image="docker.io/evil/miner:1"), headers=AUTH).status_code == 422
-    assert client.post("/v1/sandboxes", json=body(image="localhost/sif-agent-runner-evil:1"), headers=AUTH).status_code == 422
-    assert client.post("/v1/sandboxes", json=body(image="localhost/sif-agent-runner@sha256:abc"), headers=AUTH).status_code == 200
+    assert client.post("/v1/sandboxes", json=body(image="localhost/sis-agent-runner-evil:1"), headers=AUTH).status_code == 422
+    assert client.post("/v1/sandboxes", json=body(image="localhost/sis-agent-runner@sha256:abc"), headers=AUTH).status_code == 200
 
 
 def test_unsafe_specs_are_rejected_by_the_api(client):
@@ -207,7 +207,7 @@ async def test_both_backends_read_the_last_lines_of_a_sandbox():
 
     def podman(req: httpx.Request) -> httpx.Response:
         seen.append((req.url.path, dict(req.url.params)))
-        if "sif-sandbox-gone" in req.url.path:
+        if "sis-sandbox-gone" in req.url.path:
             return httpx.Response(404)
         return httpx.Response(200, content=bytes([1, 0, 0, 0, 0, 0, 0, 6]) + b"a\nb\nc\n")
 

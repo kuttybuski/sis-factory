@@ -1,5 +1,5 @@
 """Local backend: sibling containers through the Podman API. Isolation comes from an internal-only network (no route out),
-dropped capabilities, a read-only root filesystem and resource limits. Add a gVisor runtime with SIF_PODMAN_RUNTIME=runsc."""
+dropped capabilities, a read-only root filesystem and resource limits. Add a gVisor runtime with SIS_PODMAN_RUNTIME=runsc."""
 
 import json
 import time
@@ -9,18 +9,18 @@ import httpx
 from sandbox_provisioner.models import SandboxInfo, SandboxSpec
 
 API = "/v4.0.0/libpod"
-LABEL = "sif.managed"
+LABEL = "sis.managed"
 
 
 def container_name(task_id: str) -> str:
-    return f"sif-sandbox-{task_id.lower()}"
+    return f"sis-sandbox-{task_id.lower()}"
 
 
 def create_payload(spec: SandboxSpec, network: str, runtime: str = "", now: float | None = None) -> dict:
     """The container definition. Verified against a real Podman 5 (capabilities dropped, read-only root, no route out)."""
     payload = {
         "name": container_name(spec.task_id), "image": spec.image, "env": spec.env,
-        "labels": {LABEL: "true", "sif.task": spec.task_id, "sif.created": str(int(now or time.time())), "sif.ttl": str(spec.ttl_seconds)},
+        "labels": {LABEL: "true", "sis.task": spec.task_id, "sis.created": str(int(now or time.time())), "sis.ttl": str(spec.ttl_seconds)},
         "netns": {"nsmode": "bridge"}, "Networks": {network: {}},
         "cap_drop": ["ALL"], "no_new_privileges": True, "read_only_filesystem": True, "user": "10001:10001",
         "resource_limits": {"memory": {"limit": spec.memory_mb * 1024 * 1024}, "cpu": {"quota": int(spec.cpus * 100000), "period": 100000}, "pids": {"limit": spec.pids}},
@@ -46,7 +46,7 @@ def demux(data: bytes) -> str:
 class PodmanBackend:
     name = "podman"
 
-    def __init__(self, client: httpx.AsyncClient | None = None, *, socket: str = "/run/podman/podman.sock", network: str = "sif-sandboxes", runtime: str = "") -> None:
+    def __init__(self, client: httpx.AsyncClient | None = None, *, socket: str = "/run/podman/podman.sock", network: str = "sis-sandboxes", runtime: str = "") -> None:
         self.client = client or httpx.AsyncClient(transport=httpx.AsyncHTTPTransport(uds=socket), base_url="http://podman", timeout=60)
         self.network, self.runtime = network, runtime
 
@@ -62,7 +62,7 @@ class PodmanBackend:
         payload = create_payload(spec, self.network, self.runtime)
         await self._check(await self.client.post(f"{API}/containers/create", json=payload), "create container")
         await self._check(await self.client.post(f"{API}/containers/{payload['name']}/start"), "start container")
-        return SandboxInfo(task_id=spec.task_id, name=payload["name"], backend=self.name, status="running", created_at=float(payload["labels"]["sif.created"]), ttl_seconds=spec.ttl_seconds)
+        return SandboxInfo(task_id=spec.task_id, name=payload["name"], backend=self.name, status="running", created_at=float(payload["labels"]["sis.created"]), ttl_seconds=spec.ttl_seconds)
 
     async def delete(self, task_id: str) -> bool:
         r = await self.client.delete(f"{API}/containers/{container_name(task_id)}", params={"force": "true"})
@@ -74,8 +74,8 @@ class PodmanBackend:
     @staticmethod
     def _info(c: dict) -> SandboxInfo:
         labels = c.get("Labels") or {}
-        return SandboxInfo(task_id=labels.get("sif.task", ""), name=(c.get("Names") or [""])[0], backend="podman", status=c.get("State", "unknown"),
-                           created_at=float(labels.get("sif.created", 0)), ttl_seconds=int(labels.get("sif.ttl", 0)))
+        return SandboxInfo(task_id=labels.get("sis.task", ""), name=(c.get("Names") or [""])[0], backend="podman", status=c.get("State", "unknown"),
+                           created_at=float(labels.get("sis.created", 0)), ttl_seconds=int(labels.get("sis.ttl", 0)))
 
     async def logs(self, task_id: str, tail: int) -> list[str] | None:
         r = await self.client.get(f"{API}/containers/{container_name(task_id)}/logs", params={"stdout": "true", "stderr": "true", "tail": str(tail)})

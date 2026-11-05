@@ -4,8 +4,8 @@ import logging
 
 import httpx
 
-from sif_contracts.namespaces import DEFAULT, Namespaces
-from sif_contracts.workflow import SIG_KILL, workflow_id
+from sis_contracts.namespaces import DEFAULT, Namespaces
+from sis_contracts.workflow import SIG_KILL, workflow_id
 
 log = logging.getLogger("orchestrator_worker")
 

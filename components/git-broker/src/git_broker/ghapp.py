@@ -1,7 +1,7 @@
 """GitHub App identity: short-lived installation tokens instead of a personal access token.
 
 The app is installed only on the repositories the factory may touch. Each token is minted for one repository with only the permissions
-git-broker uses (push sif/* branches, open and comment on PRs, read checks), and expires within the hour. A leaked token is good for
+git-broker uses (push sis/* branches, open and comment on PRs, read checks), and expires within the hour. A leaked token is good for
 one repository for minutes, not for everything the person who created a PAT can reach. Branch protection or a ruleset on the default branch
 is what stops the app from merging; see repo_posture."""
 

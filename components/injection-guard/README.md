@@ -48,9 +48,9 @@ tickets) and install instructions such as `curl ... | sh`.
 
 Every flag or block in orchestrator-worker is an incident. portal-api keeps one row per attempt per team (`injection_incidents`:
 source, verdict, score, rules, who wrote it, how often it was seen), identified by `fingerprint()`: a hash of the normalized text, so the
-text itself is never stored. The worker logs each one (`make logs`) and, every `SIF_DIGEST_POLL_SECONDS`, opens one security PR per team
-repository for the attempts not yet recorded there. It adds them to `.sif/security/injection-log.md` and their fingerprints to
-`.sif/security/blocklist.txt`. Merging is the approval: fingerprints still in the blocklist are blocked for that team from then on, even
+text itself is never stored. The worker logs each one (`make logs`) and, every `SIS_DIGEST_POLL_SECONDS`, opens one security PR per team
+repository for the attempts not yet recorded there. It adds them to `.sis/security/injection-log.md` and their fingerprints to
+`.sis/security/blocklist.txt`. Merging is the approval: fingerprints still in the blocklist are blocked for that team from then on, even
 where the rules alone would let the text through. A line deleted before merging, or a closed PR, marks the attempt harmless. While a
 security PR is open on a repository, new attempts wait for the next one. The PR never contains the attack text, so git-broker's own
 screen lets it through; the Jira key leads to the original.

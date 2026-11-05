@@ -20,9 +20,9 @@ members = [
     "portal-api",
     "sandbox-gateway",
     "sandbox-provisioner",
-    "sif",
-    "sif-context",
-    "sif-contracts",
+    "sis",
+    "sis-context",
+    "sis-contracts",
 ]
 
 [[package]]
@@ -330,8 +330,8 @@ source = { editable = "components/context-api" }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "sif-context" },
-    { name = "sif-contracts" },
+    { name = "sis-context" },
+    { name = "sis-contracts" },
     { name = "uvicorn" },
 ]
 
@@ -339,8 +339,8 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
-    { name = "sif-context", editable = "libs/context" },
-    { name = "sif-contracts", editable = "libs/contracts" },
+    { name = "sis-context", editable = "libs/context" },
+    { name = "sis-contracts", editable = "libs/contracts" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
 
@@ -351,8 +351,8 @@ source = { editable = "components/context-ingest" }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "sif-context" },
-    { name = "sif-contracts" },
+    { name = "sis-context" },
+    { name = "sis-contracts" },
     { name = "uvicorn" },
 ]
 
@@ -360,8 +360,8 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
-    { name = "sif-context", editable = "libs/context" },
-    { name = "sif-contracts", editable = "libs/contracts" },
+    { name = "sis-context", editable = "libs/context" },
+    { name = "sis-contracts", editable = "libs/contracts" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
 
@@ -435,7 +435,7 @@ source = { editable = "components/embeddings" }
 dependencies = [
     { name = "fastapi" },
     { name = "fastembed" },
-    { name = "sif-context" },
+    { name = "sis-context" },
     { name = "uvicorn" },
 ]
 
@@ -443,7 +443,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "fastembed", specifier = ">=0.4" },
-    { name = "sif-context", editable = "libs/context" },
+    { name = "sis-context", editable = "libs/context" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
 
@@ -520,7 +520,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "injection-guard" },
-    { name = "sif-contracts" },
+    { name = "sis-contracts" },
     { name = "uvicorn" },
 ]
 
@@ -530,7 +530,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "injection-guard", editable = "components/injection-guard" },
-    { name = "sif-contracts", editable = "libs/contracts" },
+    { name = "sis-contracts", editable = "libs/contracts" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
 
@@ -657,7 +657,7 @@ source = { editable = "components/jira-connector" }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
-    { name = "sif-contracts" },
+    { name = "sis-contracts" },
     { name = "temporalio" },
     { name = "uvicorn" },
 ]
@@ -666,7 +666,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
-    { name = "sif-contracts", editable = "libs/contracts" },
+    { name = "sis-contracts", editable = "libs/contracts" },
     { name = "temporalio", specifier = ">=1.7" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
@@ -951,7 +951,7 @@ source = { editable = "components/orchestrator-worker" }
 dependencies = [
     { name = "httpx" },
     { name = "injection-guard" },
-    { name = "sif-contracts" },
+    { name = "sis-contracts" },
     { name = "temporalio" },
 ]
 
@@ -959,7 +959,7 @@ dependencies = [
 requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
     { name = "injection-guard", editable = "components/injection-guard" },
-    { name = "sif-contracts", editable = "libs/contracts" },
+    { name = "sis-contracts", editable = "libs/contracts" },
     { name = "temporalio", specifier = ">=1.7" },
 ]
 
@@ -1067,8 +1067,8 @@ dependencies = [
     { name = "httpx" },
     { name = "injection-guard" },
     { name = "psycopg", extra = ["binary", "pool"] },
-    { name = "sif-context" },
-    { name = "sif-contracts" },
+    { name = "sis-context" },
+    { name = "sis-contracts" },
     { name = "temporalio" },
     { name = "uvicorn" },
 ]
@@ -1080,8 +1080,8 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
     { name = "injection-guard", editable = "components/injection-guard" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2" },
-    { name = "sif-context", editable = "libs/context" },
-    { name = "sif-contracts", editable = "libs/contracts" },
+    { name = "sis-context", editable = "libs/context" },
+    { name = "sis-contracts", editable = "libs/contracts" },
     { name = "temporalio", specifier = ">=1.7" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
@@ -1509,7 +1509,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "injection-guard" },
-    { name = "sif-contracts" },
+    { name = "sis-contracts" },
     { name = "temporalio" },
     { name = "uvicorn" },
 ]
@@ -1519,7 +1519,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "injection-guard", editable = "components/injection-guard" },
-    { name = "sif-contracts", editable = "libs/contracts" },
+    { name = "sis-contracts", editable = "libs/contracts" },
     { name = "temporalio", specifier = ">=1.7" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
@@ -1542,7 +1542,7 @@ requires-dist = [
 ]
 
 [[package]]
-name = "sif"
+name = "sis"
 version = "0.1.0"
 source = { virtual = "." }
 
@@ -1567,7 +1567,7 @@ dev = [
 ]
 
 [[package]]
-name = "sif-context"
+name = "sis-context"
 version = "0.1.0"
 source = { editable = "libs/context" }
 dependencies = [
@@ -1588,7 +1588,7 @@ requires-dist = [
 ]
 
 [[package]]
-name = "sif-contracts"
+name = "sis-contracts"
 version = "0.1.0"
 source = { editable = "libs/contracts" }
 dependencies = [

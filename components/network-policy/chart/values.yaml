@@ -1,6 +1,6 @@
-sandboxNamespace: sif-sandboxes
+sandboxNamespace: sis-sandboxes
 gateway:
-  namespace: sif-platform
+  namespace: sis-platform
   podLabels:
     app.kubernetes.io/name: sandbox-gateway
   port: 8080

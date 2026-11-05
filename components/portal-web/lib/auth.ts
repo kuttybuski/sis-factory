@@ -1,20 +1,20 @@
 import { headers } from 'next/headers'
 import { api, type Team } from './api'
 
-// Who is using the dashboard. With SIF_AUTH_MODE=proxy the dashboard sits behind oauth2-proxy (components/auth-proxy), which signs people
+// Who is using the dashboard. With SIS_AUTH_MODE=proxy the dashboard sits behind oauth2-proxy (components/auth-proxy), which signs people
 // in with the company's OIDC provider and passes X-Forwarded-Email / X-Forwarded-Groups; portal-web must then only be reachable through
-// the proxy. Without it (local development) everyone is "local" with full rights, and the header says so. With SIF_ENV=production there
+// the proxy. Without it (local development) everyone is "local" with full rights, and the header says so. With SIS_ENV=production there
 // is no such fallback: without sign-in nobody can do anything (proxy.ts refuses every page).
 type Role = 'viewer' | 'operator' | 'admin'
 interface User { email: string; role: Role; sso: boolean; groups: string[] }
 
 const RANK: Record<Role, number> = { viewer: 0, operator: 1, admin: 2 }
 const list = (v: string | undefined) => (v ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
-export const SSO = process.env.SIF_AUTH_MODE === 'proxy'
-const PRODUCTION = process.env.SIF_ENV === 'production'
+export const SSO = process.env.SIS_AUTH_MODE === 'proxy'
+const PRODUCTION = process.env.SIS_ENV === 'production'
 
-// SIF_PORTAL_ADMINS / SIF_PORTAL_OPERATORS list emails or IdP groups. Everyone else who can sign in may look but not change anything.
-function roleFor(email: string, groups: string[], admins = list(process.env.SIF_PORTAL_ADMINS), operators = list(process.env.SIF_PORTAL_OPERATORS)): Role {
+// SIS_PORTAL_ADMINS / SIS_PORTAL_OPERATORS list emails or IdP groups. Everyone else who can sign in may look but not change anything.
+function roleFor(email: string, groups: string[], admins = list(process.env.SIS_PORTAL_ADMINS), operators = list(process.env.SIS_PORTAL_OPERATORS)): Role {
   const ids = [email.toLowerCase(), ...groups.map((g) => g.toLowerCase())]
   return ids.some((i) => admins.includes(i)) ? 'admin' : ids.some((i) => operators.includes(i)) ? 'operator' : 'viewer'
 }

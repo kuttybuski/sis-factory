@@ -4,7 +4,7 @@ import secrets
 
 
 def make_canary() -> str:
-    return f"SIFCANARY-{secrets.token_hex(8)}"
+    return f"SISCANARY-{secrets.token_hex(8)}"
 
 
 def with_canary(system_prompt: str) -> tuple[str, str]:

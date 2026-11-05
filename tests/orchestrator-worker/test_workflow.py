@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 import pytest_asyncio
-from sif_contracts.workflow import (Q_LOGS, Answer, EVAL_WORKFLOW, JIRA_QUEUE, ORCHESTRATOR_QUEUE, SIG_COST, SIG_DONE, SIG_FAILED, SIG_KILL, SIG_LOG, SIG_QUESTION, SIG_REPLY,
+from sis_contracts.workflow import (Q_LOGS, Answer, EVAL_WORKFLOW, JIRA_QUEUE, ORCHESTRATOR_QUEUE, SIG_COST, SIG_DONE, SIG_FAILED, SIG_KILL, SIG_LOG, SIG_QUESTION, SIG_REPLY,
                                     WORKFLOW, AgentResult, EvalCase, EvalInput, Question, Reply, TaskInput)
 from temporalio import activity
 from temporalio.client import Client
@@ -180,11 +180,11 @@ async def test_happy_path_ends_in_a_draft_pr(env):
     assert f.kinds() == ["task.discovered", "classify.started", "classify.result", "classify.result", "classify.result", "repo.checked_out", "context.started", "log.line",
                          "sandbox.created", "agent.running", "log.line", "publish.started", "pr.opened"]
     assert f.events[7]["source"] == "temporal" and f.events[7]["text"].startswith("Context ready: 0 source(s)")  # what the agent was given, on the log
-    assert f.events[11]["text"] == f"sif/{inp.jira_key}-fix-add"
+    assert f.events[11]["text"] == f"sis/{inp.jira_key}-fix-add"
     assert f.events[0]["jiraKey"] == inp.jira_key and f.events[0]["team"] == "Payments" and f.events[0]["budgetUsd"] == 2.0
     assert f.events[-1]["prUrl"].endswith("/pull/7")
     branch, title, body = f.called("publish_pr")[0]
-    assert branch == f"sif/{inp.jira_key}-fix-add" and "draft" in body and inp.jira_key in body
+    assert branch == f"sis/{inp.jira_key}-fix-add" and "draft" in body and inp.jira_key in body
     assert f.events[10]["source"] == "temporal" and "started working" in f.events[10]["text"]  # progress stays on the log
     assert len(f.jira) == 1 and "draft pull request" in f.jira[0]  # Jira only hears what matters: here, the outcome
     assert f.called("stop_sandbox") == [inp.jira_key]
@@ -197,7 +197,7 @@ async def test_tickets_that_look_like_instructions_never_reach_a_sandbox(env):
     h = await start(client, new_input())
     assert await h.result() == "bounced"
     assert f.called("start_sandbox") == [] and "jira.bounced" in f.kinds() and any("attempt to instruct" in t for t in f.jira)
-    assert (["sif-blocked"], ["sif-picked"]) in f.labels
+    assert (["sis-blocked"], ["sis-picked"]) in f.labels
     assert [(i["source"], i["verdict"], i["team"], i["repo"]) for i in f.incidents] == [("jira_ticket", "block", "Payments", "acme/api")]
     assert f.scans == [("jira_ticket", "Payments")]  # with the team, so its blocklist applies
 
@@ -238,7 +238,7 @@ async def test_a_thin_ticket_gets_a_question_and_is_bounced_only_if_nobody_answe
     f.quality = (False, ["what 'done' looks like"])
     h = await start(client, new_input(wait=1))
     assert await h.result() == "bounced" and f.called("start_sandbox") == []
-    assert any("Before I start, please tell me what 'done' looks like" in t for t in f.jira) and (["sif-needs-info"], ["sif-picked"]) in f.labels
+    assert any("Before I start, please tell me what 'done' looks like" in t for t in f.jira) and (["sis-needs-info"], ["sis-picked"]) in f.labels
 
 
 async def test_the_answer_to_the_question_is_added_to_the_ticket_and_work_starts(env):
@@ -246,10 +246,10 @@ async def test_the_answer_to_the_question_is_added_to_the_ticket_and_work_starts
     f.quality = (False, ["what 'done' looks like"])
     h = await start(client, new_input())
     await until(h, "waiting_for_human")
-    await h.signal(SIG_REPLY, Reply(text="@sif done when retries back off exponentially", author="Rae", comment_id="c1"))
+    await h.signal(SIG_REPLY, Reply(text="@sis done when retries back off exponentially", author="Rae", comment_id="c1"))
     await until(h, "running")
     assert "Clarification from Rae" in f.sandboxes[0]["description"] and "back off exponentially" in f.sandboxes[0]["description"]
-    assert ([], ["sif-needs-info"]) in f.labels and "jira.bounced" not in f.kinds()
+    assert ([], ["sis-needs-info"]) in f.labels and "jira.bounced" not in f.kinds()
     assert not any("thanks" in t for t in f.jira)  # the label change says it; no comment
     await h.signal(SIG_KILL, "test")
     assert await h.result() == "killed"
@@ -262,7 +262,7 @@ async def test_a_question_goes_to_jira_and_the_reply_comes_back(env):
     await until(h, "running")
     await h.signal(SIG_QUESTION, Question(id="q1", text="Which module owns parsing?"))
     await until(h, "waiting_for_human")
-    assert any("Which module owns parsing?" in t and "@sif" in t for t in f.jira)
+    assert any("Which module owns parsing?" in t and "@sis" in t for t in f.jira)
     asked = next(e for e in f.events if e["type"] == "agent.asked_question")
     assert asked["reason"] == "question" and asked["deadline"] > asked["ts"]
     assert (await h.query("get_answer", "q1", result_type=Answer)).status == "pending"
@@ -270,7 +270,7 @@ async def test_a_question_goes_to_jira_and_the_reply_comes_back(env):
     await until(h, "running")
     ans = await h.query("get_answer", "q1", result_type=Answer)
     assert (ans.status, ans.text) == ("answered", "billing/address.py")
-    assert next(e for e in f.events if e["type"] == "agent.answered")["text"] == "@sif billing/address.py"
+    assert next(e for e in f.events if e["type"] == "agent.answered")["text"] == "@sis billing/address.py"
     await h.signal(SIG_DONE, AgentResult(patch="diff --git a/x b/x\n"))
     assert await h.result() == "pr_opened"
 
@@ -295,7 +295,7 @@ async def test_no_reply_in_time_kills_the_sandbox_and_labels_the_ticket(env):
     await h.signal(SIG_QUESTION, Question(id="q1", text="Which module owns parsing?"))
     assert await h.result() == "timed_out"
     assert "wait.timed_out" in f.kinds() and f.called("stop_sandbox") == [inp.jira_key] and f.called("publish_pr") == []
-    assert (["sif-timed-out"], ["sif-picked"]) in f.labels and any("shut the sandbox down" in t for t in f.jira)
+    assert (["sis-timed-out"], ["sis-picked"]) in f.labels and any("shut the sandbox down" in t for t in f.jira)
 
 
 async def test_a_stop_reply_ends_the_run(env):
@@ -315,7 +315,7 @@ async def test_budget_questions_need_approve_or_stop(env):
     await until(h, "running")
     await h.signal(SIG_QUESTION, Question(id="b1", text="Budget of $2.00 reached.", reason="budget"))
     await until(h, "waiting_for_human")
-    assert any("@sif approve" in t for t in f.jira)
+    assert any("@sis approve" in t for t in f.jira)
     await h.signal(SIG_REPLY, Reply(text="what does that cost?", comment_id="c1"))  # not a decision
     await asyncio.sleep(0.5)
     assert (await h.query("get_answer", "b1", result_type=Answer)).status == "pending" and any("needs a decision on the budget" in t for t in f.jira)
@@ -413,7 +413,7 @@ async def test_agent_logs_and_spend_reach_the_event_stream(env):
 
 
 # ---------------------------------------------------------------- handling policy: staged pipeline and splitting
-from sif_contracts import handling as H  # noqa: E402
+from sis_contracts import handling as H  # noqa: E402
 
 STORY_FULL = {"intent": True, "intent_approval": True, "design": True, "design_approval": True}
 
@@ -519,7 +519,7 @@ async def test_after_the_last_allowed_revision_only_approve_or_stop_are_taken(en
     assert any("no more revisions" in t for t in f.jira) and len(f.sandboxes) == 2
     await reply(h, "stop")
     assert await h.result() == "killed"
-    assert ([], ["sif-picked"]) in f.labels
+    assert ([], ["sis-picked"]) in f.labels
 
 
 async def test_stop_at_an_approval_ends_the_ticket_without_a_developer(env):
@@ -538,7 +538,7 @@ async def test_no_reply_to_an_approval_request_times_out_and_labels_the_ticket(e
     await agent_ready(h, f, 1)
     await h.signal(SIG_DONE, doc("intent.md", "waiting"))
     assert await h.result() == "timed_out"
-    assert "wait.timed_out" in f.kinds() and (["sif-timed-out"], ["sif-picked"]) in f.labels and len(f.sandboxes) == 1
+    assert "wait.timed_out" in f.kinds() and (["sis-timed-out"], ["sis-picked"]) in f.labels and len(f.sandboxes) == 1
 
 
 async def test_a_cancel_while_waiting_for_approval_ends_the_run(env):
@@ -623,7 +623,7 @@ async def test_an_epic_is_split_into_stories_after_a_person_approves_the_proposa
     assert (first["project"], first["kind"], first["parent"]) == (inp.jira_key.split("-")[0], "story", inp.jira_key)
     assert "Repo: acme/api" in first["description"] and f"Split from {inp.jira_key}" in first["description"]
     assert f.events[-1]["type"] == "children.created" and len(f.sandboxes) == 1 and "pr.opened" not in f.kinds()
-    assert (["sif-split"], ["sif-picked"]) in f.labels
+    assert (["sis-split"], ["sis-picked"]) in f.labels
 
 
 async def test_an_epic_without_split_approval_creates_the_stories_right_away(env):
@@ -687,7 +687,7 @@ async def test_an_epic_with_no_policy_in_its_input_gets_the_built_in_one(env):
 
 # ---- after the PR opens: review comments and CI go back to the agent until a person merges or closes it
 def pr(state="open", feedback=(), ci="none", sha="c" * 40):
-    return {"state": state, "head_sha": sha, "head_ref": "sif/x", "feedback": list(feedback),
+    return {"state": state, "head_sha": sha, "head_ref": "sis/x", "feedback": list(feedback),
             "ci": {"state": ci, "sha": sha, "failures": [{"name": "tests", "summary": "test_add failed"}] if ci == "failure" else []}}
 
 
@@ -710,11 +710,11 @@ async def test_review_comments_are_revised_on_the_pr_branch_until_it_is_merged(e
     assert "named constant" in f.sandboxes[-1]["description"] and "already open as pull request" in f.sandboxes[-1]["description"]
     await h.signal(SIG_DONE, AgentResult(patch="diff --git a/y b/y\n", summary="added RATE constant"))
     assert await h.result() == "merged"
-    assert f.updates[0]["branch"] == f"sif/{inp.jira_key}-fix-add" and f.updates[0]["number"] == 7 and "RATE" in f.updates[0]["comment"]
+    assert f.updates[0]["branch"] == f"sis/{inp.jira_key}-fix-add" and f.updates[0]["number"] == 7 and "RATE" in f.updates[0]["comment"]
     kinds = f.kinds()
     assert kinds.count("context.started") == 2 and kinds.count("publish.started") == 2  # the first PR and the revision each gather context and publish
     assert kinds.count("review.received") == 1 and kinds.index("review.received") < kinds.index("pr.updated") < kinds.index("pr.merged")
-    assert (["sif-merged"], ["sif-picked"]) in f.labels and not any("revising" in t for t in f.jira)
+    assert (["sis-merged"], ["sis-picked"]) in f.labels and not any("revising" in t for t in f.jira)
     assert any("is revising" in e.get("text", "") and "pushed revision 1" not in e.get("text", "") for e in f.events if e["type"] == "log.line")
     assert any("pushed revision 1" in e.get("text", "") for e in f.events if e["type"] == "log.line")
     assert f.called("checkout_repo")[-1] == "Payments" and len(f.sandboxes) == 2
@@ -787,7 +787,7 @@ async def test_failing_ci_is_fixed_and_a_closed_pr_ends_the_task(env):
     await h.signal(SIG_DONE, AgentResult(patch="", summary="the failure is a flaky network test"))
     assert await h.result() == "closed"
     assert f.updates == [] and any("changed nothing" in c for c in f.pr_comments)  # no empty commit; the reason is on the PR
-    assert "pr.closed" in f.kinds() and (["sif-closed"], ["sif-picked"]) in f.labels
+    assert "pr.closed" in f.kinds() and (["sis-closed"], ["sis-picked"]) in f.labels
 
 
 async def test_after_the_round_limit_the_reviewer_is_asked_to_finish_by_hand(env):

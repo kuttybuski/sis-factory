@@ -1,4 +1,4 @@
-# Build context is the repo root: docker build -f components/agent-runner/Dockerfile -t localhost/sif-agent-runner:latest .
+# Build context is the repo root: docker build -f components/agent-runner/Dockerfile -t localhost/sis-agent-runner:latest .
 # Add the proprietary Claude Code CLI with --build-arg INSTALL_CLAUDE=true (subject to Anthropic's terms).
 FROM docker.io/library/python:3.12-slim
 ARG INSTALL_CLAUDE=false
@@ -9,6 +9,6 @@ RUN pip install --no-cache-dir /src
 # Runs as a non-root user on a read-only root filesystem; /workspace and /tmp are tmpfs mounts set by the provisioner.
 RUN useradd -u 10001 -m -d /workspace agent || true
 USER 10001
-ENV SIF_WORKSPACE=/workspace HOME=/workspace
+ENV SIS_WORKSPACE=/workspace HOME=/workspace
 WORKDIR /workspace
-CMD ["sif-agent"]
+CMD ["sis-agent"]

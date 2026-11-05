@@ -31,7 +31,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         {sources.length === 0 ? (
           <div className="empty">
             No sources yet. Give a team its Confluence spaces and repos, then run a sync:<br />
-            <code>curl -X PUT localhost:8000/api/teams -H "Authorization: Bearer $SIF_DASHBOARD_TOKEN" -H 'content-type: application/json' -d '{'{'}"name":"Payments","confluence_spaces":["PAY"],"repos":["acme/payments-api"]{'}'}'</code>
+            <code>curl -X PUT localhost:8000/api/teams -H "Authorization: Bearer $SIS_DASHBOARD_TOKEN" -H 'content-type: application/json' -d '{'{'}"name":"Payments","confluence_spaces":["PAY"],"repos":["acme/payments-api"]{'}'}'</code>
           </div>
         ) : (
           <table>

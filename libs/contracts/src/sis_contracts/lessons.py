@@ -1,4 +1,4 @@
-"""Lessons: team rules added with "@sif remember", approved by role, and delivered to the agent as a trusted block.
+"""Lessons: team rules added with "@sis remember", approved by role, and delivered to the agent as a trusted block.
 
 Pure functions only (no I/O). Lessons are the one place where text is allowed to act as an instruction for the agent,
 so everything that enters passes these gates first: allowed author, size and shape, injection and secret scans (in
@@ -14,7 +14,7 @@ from math import ceil
 
 from pydantic import BaseModel
 
-from sif_contracts.settings import Settings
+from sis_contracts.settings import Settings
 
 
 class Scope(StrEnum):
@@ -71,9 +71,9 @@ class Command(BaseModel):
 
 
 def parse_command(comment: str, s: Settings) -> Command | None:
-    """Parses '@sif remember <rule> [scope=repo|team|global|path:<glob>] [ttl=90d]' and '@sif forget L12'.
+    """Parses '@sis remember <rule> [scope=repo|team|global|path:<glob>] [ttl=90d]' and '@sis forget L12'.
 
-    '@sif-remember' works too. Check this before treating a comment as an answer to a question.
+    '@sis-remember' works too. Check this before treating a comment as an answer to a question.
     """
     mention = re.escape(s.mention)
     cmds = f"{re.escape(s.cmd_remember)}|{re.escape(s.cmd_forget)}"

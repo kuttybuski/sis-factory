@@ -10,8 +10,8 @@ AUTH = {"Authorization": "Bearer test-token"}
 
 @pytest.fixture(scope="module")
 def client():
-    os.environ["SIF_INGEST_TOKEN"] = "test-token"
-    os.environ["SIF_CONTEXT_SYNC_MINUTES"] = "0"
+    os.environ["SIS_INGEST_TOKEN"] = "test-token"
+    os.environ["SIS_CONTEXT_SYNC_MINUTES"] = "0"
     for var in ("GITHUB_TOKEN", "CONFLUENCE_BASE_URL", "JIRA_BASE_URL", "CONFLUENCE_API_TOKEN", "JIRA_API_TOKEN"):
         os.environ.pop(var, None)
     import importlib
@@ -96,14 +96,14 @@ def test_sync_without_credentials_reports_a_clear_error_instead_of_crashing(clie
 def test_answered_questions_become_searchable_knowledge(client):
     from context_ingest import sync
     from portal_api import db as portal_db
-    from sif_context import db as cdb
-    from sif_contracts.events import EventType as T
-    from sif_contracts.events import FactoryEvent
+    from sis_context import db as cdb
+    from sis_contracts.events import EventType as T
+    from sis_contracts.events import FactoryEvent
 
     async def seed(pool=client.app.state.pool):
         for t, extra in [(T.TASK_DISCOVERED, {"jira_key": "QA-1", "team": "QaTeam", "repo": "acme/api"}),
                          (T.AGENT_ASKED_QUESTION, {"text": "Which module owns address parsing?", "reason": "question"}),
-                         (T.AGENT_ANSWERED, {"text": "@sif billing/address.py owns it."}), (T.PR_OPENED, {})]:
+                         (T.AGENT_ANSWERED, {"text": "@sis billing/address.py owns it."}), (T.PR_OPENED, {})]:
             await portal_db.ingest(pool, FactoryEvent(type=t, task_id="QA-1", ts=1000, **extra))
 
     client.portal.call(seed)
@@ -114,14 +114,14 @@ def test_answered_questions_become_searchable_knowledge(client):
     out = client.portal.call(sync.sync_one, client.app.state.pool, src[0], client.app.state.embedder, sync.Config())
     assert out["ok"] and out["new_or_changed"] >= 1
     hits = client.portal.call(cdb.search, client.app.state.pool, client.app.state.embedder, "who owns address parsing module", cdb.SearchCtx(team="QaTeam", kinds=["qa"]))
-    assert hits and "billing/address.py owns it" in hits[0].text and "@sif" not in hits[0].text
+    assert hits and "billing/address.py owns it" in hits[0].text and "@sis" not in hits[0].text
     sql(client, "delete from tasks where id = 'QA-1'")
 
 
 @pytest.mark.asyncio
 async def test_recurring_review_feedback_is_proposed_as_candidate_lessons(monkeypatch):
     from context_ingest import sync
-    from sif_context.pr import PRData, ReviewComment
+    from sis_context.pr import PRData, ReviewComment
 
     sent = []
 

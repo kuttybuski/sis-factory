@@ -3,17 +3,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Behaviour knobs shared by services. Every field is overridable as SIF_<FIELD> in .env."""
+    """Behaviour knobs shared by services. Every field is overridable as SIS_<FIELD> in .env."""
 
-    model_config = SettingsConfigDict(env_prefix="SIF_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="SIS_", env_file=".env", extra="ignore")
 
     # Jira labels
-    label_trigger: str = "sif"  # add this label to a ticket to have it picked up
-    label_picked: str = "sif-picked"  # swapped in by jira-connector once the workflow has started
-    label_timed_out: str = "sif-timed-out"  # set when a wait for a reply expires and the sandbox is killed
+    label_trigger: str = "sis"  # add this label to a ticket to have it picked up
+    label_picked: str = "sis-picked"  # swapped in by jira-connector once the workflow has started
+    label_timed_out: str = "sis-timed-out"  # set when a wait for a reply expires and the sandbox is killed
 
     # Talking to the agent in Jira comments
-    mention: str = "@sif"  # plain-text handle; comments without it are ignored
+    mention: str = "@sis"  # plain-text handle; comments without it are ignored
     bot_account_id: str = ""  # Jira account id of the bot user, so real @mentions also match
 
     # Per-run budget (hard stop at the gateway)
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # How long a sandbox may wait for a human reply before it is killed
     wait_timeout_minutes: int = 120
 
-    # Lessons ("@sif remember ..."): approved team knowledge delivered to the agent
+    # Lessons ("@sis remember ..."): approved team knowledge delivered to the agent
     cmd_remember: str = "remember"
     cmd_forget: str = "forget"
     lesson_auto_approve: bool = True  # role-based; False sends every lesson to the Learning page

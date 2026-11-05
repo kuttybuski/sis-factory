@@ -23,7 +23,7 @@ export async function approve(fd: FormData) { await act(String(fd.get('id')), 'a
 export async function reject(fd: FormData) { await act(String(fd.get('id')), 'reject', String(fd.get('reason') || '') || undefined) }
 export async function disable(fd: FormData) { await act(String(fd.get('id')), 'disable') }
 
-// Runs the self-improvement cycle now instead of waiting for the next scheduled run (SIF_IMPROVE_MINUTES).
+// Runs the self-improvement cycle now instead of waiting for the next scheduled run (SIS_IMPROVE_MINUTES).
 export async function runCycle() {
   const who = await authorize('operator')
   const error = typeof who === 'string' ? who : await write('POST', '/api/improve/run')

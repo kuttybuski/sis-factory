@@ -14,7 +14,7 @@ from urllib.parse import quote, urlparse
 
 import httpx
 
-log = logging.getLogger("sif_contracts.connections")
+log = logging.getLogger("sis_contracts.connections")
 
 PROVIDERS = ("jira", "github")
 DEFAULT_GITHUB_API = "https://api.github.com"

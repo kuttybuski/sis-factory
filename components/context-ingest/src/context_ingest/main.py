@@ -7,18 +7,18 @@ from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
-from sif_context import db
-from sif_context.embed import embedder_from_env
-from sif_context.models import DocIn
-from sif_context.text import md_to_chunks
-from sif_contracts import posture
-from sif_contracts import Settings
-from sif_contracts.connections import Credentials
+from sis_context import db
+from sis_context.embed import embedder_from_env
+from sis_context.models import DocIn
+from sis_context.text import md_to_chunks
+from sis_contracts import posture
+from sis_contracts import Settings
+from sis_contracts.connections import Credentials
 
 from context_ingest import sync
 
 log = logging.getLogger("context_ingest")
-SYNC_MINUTES = int(os.environ.get("SIF_CONTEXT_SYNC_MINUTES", "60"))  # 0 disables the built-in schedule
+SYNC_MINUTES = int(os.environ.get("SIS_CONTEXT_SYNC_MINUTES", "60"))  # 0 disables the built-in schedule
 
 
 async def teams(pool):
@@ -51,10 +51,10 @@ async def scheduler(app: FastAPI):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    posture.enforce("context-ingest")  # SIF_ENV=production: refuse to start with unsafe settings (sif_contracts.posture)
+    posture.enforce("context-ingest")  # SIS_ENV=production: refuse to start with unsafe settings (sis_contracts.posture)
     pool = await db.open_pool(os.environ["DATABASE_URL"])
     cfg = sync.Config()
-    internal = os.environ.get("SIF_INTERNAL_TOKEN", "")
+    internal = os.environ.get("SIS_INTERNAL_TOKEN", "")
     if cfg.portal_url and internal:  # without it every team uses the shared credentials
         cfg.credentials = Credentials(cfg.portal_url, internal, ttl=Settings().connection_cache_seconds)
     app.state.pool, app.state.embedder, app.state.cfg, app.state.locks = pool, embedder_from_env(), cfg, {}
@@ -65,13 +65,13 @@ async def lifespan(app: FastAPI):
     await pool.close()
 
 
-app = FastAPI(title="sif context-ingest", lifespan=lifespan)
+app = FastAPI(title="sis context-ingest", lifespan=lifespan)
 
 
 def require_token(authorization: str | None = Header(default=None)) -> None:
-    token = os.environ.get("SIF_INGEST_TOKEN", "")
+    token = os.environ.get("SIS_INGEST_TOKEN", "")
     if not token:
-        raise HTTPException(503, "SIF_INGEST_TOKEN is not configured")
+        raise HTTPException(503, "SIS_INGEST_TOKEN is not configured")
     if not secrets.compare_digest((authorization or "").removeprefix("Bearer "), token):
         raise HTTPException(401, "invalid token")
 

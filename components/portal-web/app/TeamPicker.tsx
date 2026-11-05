@@ -7,7 +7,7 @@ export default function TeamPicker({ team, teams }: { team: string; teams: strin
   const router = useRouter()
   const [pending, start] = useTransition()
   const pick = (name: string) => {
-    document.cookie = `sif_team=${encodeURIComponent(name)}; path=/; max-age=${name ? 60 * 60 * 24 * 365 : 0}; samesite=lax`
+    document.cookie = `sis_team=${encodeURIComponent(name)}; path=/; max-age=${name ? 60 * 60 * 24 * 365 : 0}; samesite=lax`
     start(() => router.refresh())
   }
   return (

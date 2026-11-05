@@ -9,11 +9,11 @@ import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 
-BRANCH_PREFIX = "sif/"
+BRANCH_PREFIX = "sis/"
 MAX_PATCH_BYTES = 1_000_000
 # CI definitions run with the repository's secrets, and CODEOWNERS decides who must review: a change to either is a change to who can do
 # what, so a person makes it.
-DEFAULT_PROTECTED = (".github/workflows/**,.github/actions/**,CODEOWNERS,.github/CODEOWNERS,docs/CODEOWNERS,.sif/**,.gitlab-ci.yml,.gitlab/**,"
+DEFAULT_PROTECTED = (".github/workflows/**,.github/actions/**,CODEOWNERS,.github/CODEOWNERS,docs/CODEOWNERS,.sis/**,.gitlab-ci.yml,.gitlab/**,"
                      "Jenkinsfile,*/Jenkinsfile,.circleci/**,azure-pipelines.yml,.azure-pipelines/**,.buildkite/**,bitbucket-pipelines.yml,.travis.yml")
 # Manifests and lockfiles, matched by file name: a new or changed dependency is code from outside the company (typosquats, licences).
 DEFAULT_DEPENDENCY_FILES = ("package.json,package-lock.json,npm-shrinkwrap.json,yarn.lock,pnpm-lock.yaml,bun.lockb,requirements*.txt,pyproject.toml,"
@@ -22,7 +22,7 @@ DEFAULT_DEPENDENCY_FILES = ("package.json,package-lock.json,npm-shrinkwrap.json,
                             "*.csproj,packages.config,packages.lock.json,Directory.Packages.props,Package.swift,Package.resolved,Podfile,Podfile.lock")
 _DIFF_FILE = re.compile(r"^diff --git a/(.*?) b/(.*)$", re.MULTILINE)
 _REPO = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
-_BRANCH = re.compile(r"^sif/[A-Za-z0-9._/-]{1,100}$")
+_BRANCH = re.compile(r"^sis/[A-Za-z0-9._/-]{1,100}$")
 
 
 class GitError(Exception):
@@ -42,13 +42,13 @@ class Settings:
     data_dir: Path = field(default_factory=lambda: Path(os.environ.get("GIT_BROKER_DATA", "/data")))
     remote_base: str = _env_default("GIT_REMOTE_BASE", "https://github.com")  # tests point this at a local directory
     token: str = _env_default("GITHUB_TOKEN", "")
-    protected: tuple[str, ...] = field(default_factory=lambda: tuple(p for p in os.environ.get("SIF_PROTECTED_PATHS", DEFAULT_PROTECTED).split(",") if p))
-    dependency_files: tuple[str, ...] = field(default_factory=lambda: () if os.environ.get("SIF_ALLOW_DEPENDENCY_CHANGES", "").lower() in ("1", "true", "yes")
-                                              else tuple(p for p in os.environ.get("SIF_DEPENDENCY_FILES", DEFAULT_DEPENDENCY_FILES).split(",") if p))
-    max_files: int = field(default_factory=lambda: int(os.environ.get("SIF_MAX_CHANGED_FILES", "50")))
-    max_lines: int = field(default_factory=lambda: int(os.environ.get("SIF_MAX_CHANGED_LINES", "3000")))
-    author_name: str = _env_default("SIF_GIT_AUTHOR_NAME", "sif-bot")
-    author_email: str = _env_default("SIF_GIT_AUTHOR_EMAIL", "sif-bot@users.noreply.github.com")
+    protected: tuple[str, ...] = field(default_factory=lambda: tuple(p for p in os.environ.get("SIS_PROTECTED_PATHS", DEFAULT_PROTECTED).split(",") if p))
+    dependency_files: tuple[str, ...] = field(default_factory=lambda: () if os.environ.get("SIS_ALLOW_DEPENDENCY_CHANGES", "").lower() in ("1", "true", "yes")
+                                              else tuple(p for p in os.environ.get("SIS_DEPENDENCY_FILES", DEFAULT_DEPENDENCY_FILES).split(",") if p))
+    max_files: int = field(default_factory=lambda: int(os.environ.get("SIS_MAX_CHANGED_FILES", "50")))
+    max_lines: int = field(default_factory=lambda: int(os.environ.get("SIS_MAX_CHANGED_LINES", "3000")))
+    author_name: str = _env_default("SIS_GIT_AUTHOR_NAME", "sis-bot")
+    author_email: str = _env_default("SIS_GIT_AUTHOR_EMAIL", "sis-bot@users.noreply.github.com")
 
 
 def check_repo(repo: str) -> str:
@@ -89,12 +89,12 @@ def check_patch(patch: str, protected: tuple[str, ...], dependency_files: tuple[
         if any(fnmatch.fnmatch(p, pat) for pat in protected):
             raise Rejected(f"the patch changes a protected path ({p}); ask a human to make that change")
         if any(fnmatch.fnmatch(Path(p).name, pat) for pat in dependency_files):
-            raise Rejected(f"the patch changes dependencies ({p}); a person adds or upgrades dependencies (SIF_ALLOW_DEPENDENCY_CHANGES)")
+            raise Rejected(f"the patch changes dependencies ({p}); a person adds or upgrades dependencies (SIS_ALLOW_DEPENDENCY_CHANGES)")
     files = len(paths - {"/dev/null"})
     if max_files and files > max_files:
-        raise Rejected(f"the patch changes {files} files, more than {max_files} (SIF_MAX_CHANGED_FILES); split the ticket into smaller ones")
+        raise Rejected(f"the patch changes {files} files, more than {max_files} (SIS_MAX_CHANGED_FILES); split the ticket into smaller ones")
     if max_lines and (n := changed_lines(patch)) > max_lines:
-        raise Rejected(f"the patch changes {n} lines, more than {max_lines} (SIF_MAX_CHANGED_LINES); split the ticket into smaller ones")
+        raise Rejected(f"the patch changes {n} lines, more than {max_lines} (SIS_MAX_CHANGED_LINES); split the ticket into smaller ones")
     return paths
 
 
@@ -205,7 +205,7 @@ TRUSTED = ("OWNER", "MEMBER", "COLLABORATOR")
 
 
 def trusted_associations() -> tuple[str, ...]:
-    return tuple(a.strip().upper() for a in os.environ.get("SIF_TRUSTED_ASSOCIATIONS", ",".join(TRUSTED)).split(",") if a.strip())
+    return tuple(a.strip().upper() for a in os.environ.get("SIS_TRUSTED_ASSOCIATIONS", ",".join(TRUSTED)).split(",") if a.strip())
 
 
 def collect_feedback(bot: str, reviews: list[dict], inline: list[dict], comments: list[dict], mention: str, trusted: tuple[str, ...] = TRUSTED) -> list[dict]:

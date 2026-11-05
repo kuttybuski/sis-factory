@@ -13,7 +13,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, field_validator
 
-from sif_contracts.namespaces import Namespaces, check_namespace, namespace_for
+from sis_contracts.namespaces import Namespaces, check_namespace, namespace_for
 
 from portal_api import db
 from portal_api.auth import dashboard_guard, pool
@@ -122,7 +122,7 @@ async def team_posture(name: str, p=Depends(pool)) -> list[dict[str, Any]]:
     team = next((t for t in await db.list_teams(p) if t["name"] == name), None)
     if team is None:
         raise HTTPException(404, "no such team")
-    broker, token = os.environ.get("GIT_BROKER_URL", ""), os.environ.get("SIF_INTERNAL_TOKEN", "")
+    broker, token = os.environ.get("GIT_BROKER_URL", ""), os.environ.get("SIS_INTERNAL_TOKEN", "")
     if not broker or not token or not team["repos"]:
         return []
     if (hit := _POSTURE.get(name)) and hit[0] > time.time():

@@ -6,10 +6,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from temporalio.worker import Worker
 
-from sif_contracts import posture
-from sif_contracts import Settings
-from sif_contracts.namespaces import NamespaceWorkers, Namespaces, team_namespaces
-from sif_contracts.workflow import ORCHESTRATOR_QUEUE
+from sis_contracts import posture
+from sis_contracts import Settings
+from sis_contracts.namespaces import NamespaceWorkers, Namespaces, team_namespaces
+from sis_contracts.workflow import ORCHESTRATOR_QUEUE
 
 from orchestrator_worker import activities
 from orchestrator_worker.digests import check_open_digests, open_due_digests
@@ -47,7 +47,7 @@ async def digest_loop(deps: activities.Deps, every: float) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    posture.enforce("orchestrator-worker")  # SIF_ENV=production: refuse to start with unsafe settings (sif_contracts.posture)
+    posture.enforce("orchestrator-worker")  # SIS_ENV=production: refuse to start with unsafe settings (sis_contracts.posture)
     deps = activities.internal_clients()
     activities.set_deps(deps)
     s = Settings()
@@ -56,8 +56,8 @@ async def lifespan(app: FastAPI):
     workers = NamespaceWorkers(namespaces, lambda c: Worker(c, task_queue=ORCHESTRATOR_QUEUE, workflows=[TaskWorkflow, ReviewWorkflow, ReplayWorkflow, EvalWorkflow], activities=activities.ALL),
                                lambda: team_namespaces(deps.portal), every=s.namespace_refresh_seconds)
     await workers.sync()
-    tasks = [asyncio.create_task(workers.run()), asyncio.create_task(request_loop(namespaces, deps, float(os.environ.get("SIF_KILL_POLL_SECONDS", "5")))),
-             asyncio.create_task(digest_loop(deps, float(os.environ.get("SIF_DIGEST_POLL_SECONDS", "300"))))]
+    tasks = [asyncio.create_task(workers.run()), asyncio.create_task(request_loop(namespaces, deps, float(os.environ.get("SIS_KILL_POLL_SECONDS", "5")))),
+             asyncio.create_task(digest_loop(deps, float(os.environ.get("SIS_DIGEST_POLL_SECONDS", "300"))))]
     app.state.tasks, app.state.workers = tasks, workers
     yield
     for t in tasks:
@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
     await workers.stop()
 
 
-app = FastAPI(title="sif orchestrator-worker", lifespan=lifespan)
+app = FastAPI(title="sis orchestrator-worker", lifespan=lifespan)
 
 
 @app.get("/healthz")

@@ -4,7 +4,7 @@ import re
 
 
 def adf_to_text(node) -> str:
-    """Plain text from an ADF document. Real mentions become [~accountid:ID], the form sif_contracts.policy understands."""
+    """Plain text from an ADF document. Real mentions become [~accountid:ID], the form sis_contracts.policy understands."""
     if node is None:
         return ""
     if isinstance(node, str):

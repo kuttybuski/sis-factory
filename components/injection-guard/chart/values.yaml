@@ -1,5 +1,5 @@
 image:
-  repository: localhost/sif-injection-guard
+  repository: localhost/sis-injection-guard
   tag: latest
 replicas: 2
 port: 8080
@@ -11,7 +11,7 @@ thresholds: {}
 allowFrom:
   - namespaceSelector:
       matchLabels:
-        kubernetes.io/metadata.name: sif-platform
+        kubernetes.io/metadata.name: sis-platform
 resources:
   requests: { cpu: 50m, memory: 64Mi }
   limits: { cpu: 500m, memory: 256Mi }

@@ -1,4 +1,4 @@
--- A team's own connection to Jira or GitHub. config holds the non-secret parts; secret is encrypted with SIF_SECRET_KEY and never leaves portal-api
+-- A team's own connection to Jira or GitHub. config holds the non-secret parts; secret is encrypted with SIS_SECRET_KEY and never leaves portal-api
 -- except to the services that use it (internal token). A team with no row uses the shared credentials from those services' environment.
 create table connections (
     team text not null,

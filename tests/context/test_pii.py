@@ -1,6 +1,6 @@
-from sif_context.pii import enabled, redact_pii
-from sif_context.models import Chunk
-from sif_context.safety import screen
+from sis_context.pii import enabled, redact_pii
+from sis_context.models import Chunk
+from sis_context.safety import screen
 
 
 def test_personal_data_is_removed_before_indexing():
@@ -12,8 +12,8 @@ def test_personal_data_is_removed_before_indexing():
 
 
 def test_which_kinds_are_redacted_is_configurable():
-    assert enabled({}) == ("card", "ssn", "iban", "email") and enabled({"SIF_REDACT_PII": "none"}) == ()
-    assert redact_pii("mail bo@x.io", enabled({"SIF_REDACT_PII": "card"}))[0] == "mail bo@x.io"
+    assert enabled({}) == ("card", "ssn", "iban", "email") and enabled({"SIS_REDACT_PII": "none"}) == ()
+    assert redact_pii("mail bo@x.io", enabled({"SIS_REDACT_PII": "card"}))[0] == "mail bo@x.io"
 
 
 def test_screening_redacts_kept_and_quarantined_chunks():

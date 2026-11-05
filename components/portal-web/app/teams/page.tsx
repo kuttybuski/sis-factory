@@ -21,7 +21,7 @@ function Fields({ t, create }: { t: Draft; create: boolean }) {
       <label className="field">
         <span>Jira projects</span>
         <input name="jira_projects" defaultValue={(t.jira_projects ?? []).join(', ')} placeholder="PAY, BILL" />
-        <small>Project keys, comma-separated. Tickets labelled <code>sif</code> in these projects belong to this team.</small>
+        <small>Project keys, comma-separated. Tickets labelled <code>sis</code> in these projects belong to this team.</small>
       </label>
       <label className="field">
         <span>Repositories</span>

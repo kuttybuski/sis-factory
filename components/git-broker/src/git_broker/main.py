@@ -11,9 +11,9 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from injection_guard import Verdict, check_outbound, scan
-from sif_contracts import posture
-from sif_contracts import Settings as SifSettings
-from sif_contracts.connections import ConnectionsUnavailable, Credentials, GithubCreds
+from sis_contracts import posture
+from sis_contracts import Settings as SisSettings
+from sis_contracts.connections import ConnectionsUnavailable, Credentials, GithubCreds
 
 from git_broker import ghapp, gitops
 
@@ -25,13 +25,13 @@ def github_client(base_url: str, token: str) -> httpx.AsyncClient:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    posture.enforce("git-broker")  # SIF_ENV=production: refuse to start with unsafe settings (sif_contracts.posture)
-    portal, internal = os.environ.get("PORTAL_API_URL", ""), os.environ.get("SIF_INTERNAL_TOKEN", "")
+    posture.enforce("git-broker")  # SIS_ENV=production: refuse to start with unsafe settings (sis_contracts.posture)
+    portal, internal = os.environ.get("PORTAL_API_URL", ""), os.environ.get("SIS_INTERNAL_TOKEN", "")
     # A team can have its own GitHub connection (saved on the dashboard). Without a portal to ask, every team uses the shared token.
-    app.state.creds = Credentials(portal, internal, ttl=SifSettings().connection_cache_seconds) if portal and internal else None
+    app.state.creds = Credentials(portal, internal, ttl=SisSettings().connection_cache_seconds) if portal and internal else None
     app.state.team_client = lambda c: github_client(c.api_url, c.token)  # tests replace this
     app.state.settings = gitops.Settings()
-    app.state.allowed_hosts = {h for h in os.environ.get("SIF_ALLOWED_LINK_HOSTS", "github.com").split(",") if h}
+    app.state.allowed_hosts = {h for h in os.environ.get("SIS_ALLOWED_LINK_HOSTS", "github.com").split(",") if h}
     app.state.settings.data_dir.mkdir(parents=True, exist_ok=True)
     api = os.environ.get("GITHUB_API_URL", "https://api.github.com")
     app.state.http = github_client(api, app.state.settings.token)
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     app.state.app_http = httpx.AsyncClient(base_url=api, timeout=30) if app_id and key else None
     app.state.app_tokens = ghapp.AppTokens(app_id, key, app.state.app_http) if app.state.app_http else None
     # Refuse to publish onto a branch that does not require an approving review (on by default in production, docs/security.md).
-    app.state.require_review = os.environ.get("SIF_REQUIRE_PROTECTED_BRANCH", "true" if os.environ.get("SIF_ENV") == "production" else "false").lower() in ("1", "true", "yes")
+    app.state.require_review = os.environ.get("SIS_REQUIRE_PROTECTED_BRANCH", "true" if os.environ.get("SIS_ENV") == "production" else "false").lower() in ("1", "true", "yes")
     app.state.protection_cache = {}
     yield
     await app.state.http.aclose()
@@ -50,13 +50,13 @@ async def lifespan(app: FastAPI):
         await app.state.app_http.aclose()
 
 
-app = FastAPI(title="sif git-broker", lifespan=lifespan)
+app = FastAPI(title="sis git-broker", lifespan=lifespan)
 
 
 def internal(authorization: str | None = Header(default=None)) -> None:
-    token = os.environ.get("SIF_INTERNAL_TOKEN", "")
+    token = os.environ.get("SIS_INTERNAL_TOKEN", "")
     if not token:
-        raise HTTPException(503, "SIF_INTERNAL_TOKEN is not configured")
+        raise HTTPException(503, "SIS_INTERNAL_TOKEN is not configured")
     if not secrets.compare_digest((authorization or "").removeprefix("Bearer "), token):
         raise HTTPException(401, "invalid token")
 
@@ -227,14 +227,14 @@ def screen(allowed_hosts: set[str], *texts: str) -> None:
 
 @app.post("/v1/publish", dependencies=[Depends(internal)])
 async def publish(body: PublishIn):
-    """Pushes the agent's patch to a sif/* branch and opens a DRAFT pull request. Never merges."""
+    """Pushes the agent's patch to a sis/* branch and opens a DRAFT pull request. Never merges."""
     async with github(body.team, body.repo) as (s, client, _):
         gitops.check_repo(body.repo)
         screen(app.state.allowed_hosts, body.title, body.body, body.patch)
         await refuse_admin(client, body.repo)
         if app.state.require_review and (problems := await check_protection(client, body.repo, body.base_branch)):
             raise gitops.Rejected(f"{body.repo}@{body.base_branch}: {problems[0]}. Protect it with a required review before the factory works there "
-                                  "(SIF_REQUIRE_PROTECTED_BRANCH).")
+                                  "(SIS_REQUIRE_PROTECTED_BRANCH).")
         message = f"{body.title}\n\n{'Jira: ' + body.jira_key if body.jira_key else ''}".strip()
         sha = await gitops.publish_branch(s, body.repo, body.base_commit, body.branch, body.patch, message)
         r = await client.post(f"/repos/{body.repo}/pulls", json={
@@ -258,7 +258,7 @@ class UpdateIn(BaseModel):
 
 @app.post("/v1/update", dependencies=[Depends(internal)])
 async def update(body: UpdateIn):
-    """Pushes a revision onto an existing sif/* PR branch and says on the PR what changed."""
+    """Pushes a revision onto an existing sis/* PR branch and says on the PR what changed."""
     async with github(body.team, body.repo) as (s, client, _):
         gitops.check_repo(body.repo)
         screen(app.state.allowed_hosts, body.message, body.comment, body.patch)
@@ -295,7 +295,7 @@ async def _get(client: httpx.AsyncClient, path: str) -> list | dict:
 
 
 @app.get("/v1/pr/{owner}/{name}/{number}", dependencies=[Depends(internal)])
-async def pr_status(owner: str, name: str, number: int, team: str | None = None, mention: str = "@sif"):
+async def pr_status(owner: str, name: str, number: int, team: str | None = None, mention: str = "@sis"):
     """Where a PR stands: open, merged or closed; what people asked for on it; and how CI did on its head commit."""
     repo = gitops.check_repo(f"{owner}/{name}")
     async with github(team, repo) as (s, client, _):

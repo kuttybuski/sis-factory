@@ -5,8 +5,8 @@ from temporalio.exceptions import ApplicationError
 
 import httpx
 
-from sif_contracts import Settings
-from sif_contracts import handling as H
+from sis_contracts import Settings
+from sis_contracts import handling as H
 
 from jira_connector.client import JiraClient
 from jira_connector.router import NoConnection

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: sif-policy
+name: sis-policy
 description: Kyverno policies enforced on the sandbox namespace (requires Kyverno installed)
 type: application
 version: 0.1.0

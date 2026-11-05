@@ -1,7 +1,7 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: sif-sandbox-baseline
+  name: sis-sandbox-baseline
 spec:
   validationFailureAction: Enforce
   background: false

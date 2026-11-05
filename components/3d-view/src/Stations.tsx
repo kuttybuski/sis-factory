@@ -107,7 +107,7 @@ const ICONS: Record<string, Draw> = {
     ctx.beginPath(); ctx.roundRect(26, 80, 40, 18, 9); ctx.fill()
     ctx.fillStyle = '#1a1b26'
     ctx.font = '700 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText('sif', 46, 90)
+    ctx.fillText('sis', 46, 90)
   },
   clear: (ctx) => {
     pen(ctx, '#73daca')
@@ -218,7 +218,7 @@ export function Pipeline() {
   )
 }
 
-/** Jira inbox: a data tower with rotating trays; ticket cards drop in from above, as tickets labelled sif arrive. */
+/** Jira inbox: a data tower with rotating trays; ticket cards drop in from above, as tickets labelled sis arrive. */
 export function InboxTower() {
   const trays = useRef<Group>(null)
   const card = useRef<Group>(null)
@@ -245,7 +245,7 @@ export function InboxTower() {
       <mesh position={[0, 2.95, 0]}><octahedronGeometry args={[0.28]} /><Glow color="#7aa2f7" intensity={3} /></mesh>
       <group ref={card} position={[0, 5.6, 0]}><Icon name="ticket" size={1.9} /></group>
       <pointLight position={[0, 2.6, 0]} color="#7aa2f7" intensity={14} distance={9} />
-      <Label y={6.4} hint="new tickets labelled sif">JIRA INBOX</Label>
+      <Label y={6.4} hint="new tickets labelled sis">JIRA INBOX</Label>
     </group>
   )
 }

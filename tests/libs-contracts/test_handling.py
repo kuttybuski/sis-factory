@@ -1,7 +1,7 @@
 import pytest
 
-from sif_contracts import handling as H
-from sif_contracts.settings import Settings
+from sis_contracts import handling as H
+from sis_contracts.settings import Settings
 
 
 def test_builtin_story_and_task_keep_todays_behaviour():

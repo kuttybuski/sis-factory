@@ -3,7 +3,7 @@ Each task's workflow runs in its team's Temporal namespace, so every call names 
 
 from typing import Any
 
-from sif_contracts.namespaces import Namespaces
+from sis_contracts.namespaces import Namespaces
 
 
 class TemporalOrchestrator:

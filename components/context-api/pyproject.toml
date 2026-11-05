@@ -3,11 +3,11 @@ name = "context-api"
 version = "0.1.0"
 description = "Hybrid retrieval and CONTEXT.md packs for agent sandboxes"
 requires-python = ">=3.12"
-dependencies = ["fastapi>=0.115", "uvicorn>=0.30", "httpx>=0.27", "sif-context", "sif-contracts"]
+dependencies = ["fastapi>=0.115", "uvicorn>=0.30", "httpx>=0.27", "sis-context", "sis-contracts"]
 
 [tool.uv.sources]
-sif-context = { workspace = true }
-sif-contracts = { workspace = true }
+sis-context = { workspace = true }
+sis-contracts = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

@@ -1,7 +1,7 @@
 """Per-team connections to Jira and GitHub: what the dashboard saves, and what the services fetch.
 
 Secrets are encrypted at rest (vault.py) and never returned by the public endpoints. The internal endpoint hands a decrypted secret only to a caller
-holding SIF_INTERNAL_TOKEN, which is how jira-connector, git-broker and context-ingest get a team's credentials."""
+holding SIS_INTERNAL_TOKEN, which is how jira-connector, git-broker and context-ingest get a team's credentials."""
 
 import asyncio
 from typing import Any
@@ -9,8 +9,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from sif_contracts import Settings
-from sif_contracts import connections as C
+from sis_contracts import Settings
+from sis_contracts import connections as C
 
 from portal_api import connection_check, db, vault
 from portal_api.auth import dashboard_guard, internal_guard, pool

@@ -2,8 +2,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from sif_contracts import Settings
-from sif_contracts.lessons import (Command, Decision, Lesson, Role, Scope, Source, Status, TaskContext, can_forget, clean_text,
+from sis_contracts import Settings
+from sis_contracts.lessons import (Command, Decision, Lesson, Role, Scope, Source, Status, TaskContext, can_forget, clean_text,
                                    decide, parse_command, render_rules, select_lessons, text_error)
 
 S = Settings(_env_file=None)
@@ -17,10 +17,10 @@ def lesson(i, text, scope=Scope.REPO, value="acme/api", **kw):
 
 # --- parsing
 @pytest.mark.parametrize("comment", [
-    "@sif remember always run the migration linter before opening a PR",
-    "@sif-remember always run the migration linter before opening a PR",
-    "@SIF: Remember - always run the migration linter before opening a PR",
-    "Thanks! @sif remember: always run the migration linter before opening a PR",
+    "@sis remember always run the migration linter before opening a PR",
+    "@sis-remember always run the migration linter before opening a PR",
+    "@SIS: Remember - always run the migration linter before opening a PR",
+    "Thanks! @sis remember: always run the migration linter before opening a PR",
 ])
 def test_remember_variants(comment):
     c = parse_command(comment, S)
@@ -28,27 +28,27 @@ def test_remember_variants(comment):
 
 
 def test_scope_and_ttl_options_are_extracted_from_the_text():
-    c = parse_command("@sif remember use the v2 client scope=path:src/billing/** ttl=90d", S)
+    c = parse_command("@sis remember use the v2 client scope=path:src/billing/** ttl=90d", S)
     assert (c.scope, c.scope_value, c.ttl_days, c.text) == (Scope.PATH, "src/billing/**", 90, "use the v2 client")
-    assert parse_command("@sif remember keep PRs small scope=team", S).scope is Scope.TEAM
-    assert parse_command("@sif remember never log tokens scope=GLOBAL", S).scope is Scope.GLOBAL
+    assert parse_command("@sis remember keep PRs small scope=team", S).scope is Scope.TEAM
+    assert parse_command("@sis remember never log tokens scope=GLOBAL", S).scope is Scope.GLOBAL
 
 
 def test_forget_takes_an_id():
-    assert parse_command("@sif forget L12", S) == Command(action="forget", lesson_id=12)
-    assert parse_command("@sif-forget 7", S).lesson_id == 7
-    assert parse_command("@sif forget everything", S) is None
+    assert parse_command("@sis forget L12", S) == Command(action="forget", lesson_id=12)
+    assert parse_command("@sis-forget 7", S).lesson_id == 7
+    assert parse_command("@sis forget everything", S) is None
 
 
-@pytest.mark.parametrize("comment", ["@sif approve", "please remember to review", "email x@sif.com remember this", "@siffy remember the milk"])
+@pytest.mark.parametrize("comment", ["@sis approve", "please remember to review", "email x@sis.com remember this", "@sisfy remember the milk"])
 def test_other_comments_are_not_commands(comment):
     assert parse_command(comment, S) is None
 
 
 def test_command_words_follow_settings():
     s = Settings(_env_file=None, cmd_remember="learn")
-    assert parse_command("@sif learn use small PRs always", s).action == "remember"
-    assert parse_command("@sif remember use small PRs always", s) is None
+    assert parse_command("@sis learn use small PRs always", s).action == "remember"
+    assert parse_command("@sis remember use small PRs always", s) is None
 
 
 def test_text_is_flattened_and_markup_removed():
@@ -138,7 +138,7 @@ def test_rendered_block_lists_ids_and_is_empty_without_lessons():
 
 
 def test_machine_lessons_are_held_back_from_a_stable_random_share_of_tasks():
-    from sif_contracts.lessons import held_out
+    from sis_contracts.lessons import held_out
 
     mined, taught = lesson(1, "Run unit-tests before finishing", source=Source.MINED), lesson(2, "Use Decimal for money")
     held = [t for t in (f"PAY-{i}" for i in range(1000)) if held_out(t, mined, 20)]

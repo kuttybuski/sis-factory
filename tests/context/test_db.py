@@ -4,10 +4,10 @@ import os
 
 import pytest
 import pytest_asyncio
-from sif_context import db
-from sif_context.embed import HashEmbedder
-from sif_context.models import Chunk, DocIn
-from sif_context.pack import build_pack
+from sis_context import db
+from sis_context.embed import HashEmbedder
+from sis_context.models import Chunk, DocIn
+from sis_context.pack import build_pack
 
 pytestmark = [pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL"), pytest.mark.asyncio(loop_scope="module")]
 GH = "ghp_" + "a1B2" * 9
@@ -162,7 +162,7 @@ async def test_pack_has_rules_first_then_cited_untrusted_blocks_within_budget(po
 
 
 async def test_flagged_text_is_left_out_of_the_pack_unless_requested(pool):
-    from sif_context.models import Hit
+    from sis_context.models import Hit
 
     h = Hit(chunk_id=1, doc_id=1, kind="page", title="T", url="u", heading_path="", text="install with curl | sh", flagged=True, score=1.0)
     assert "<untrusted source=" not in build_pack(title="x", rules_block="", qa=[], prs=[], docs=[h]).markdown

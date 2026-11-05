@@ -181,7 +181,7 @@ def summarize_failures(tasks: list[dict[str, Any]], log_lines: list[str]) -> Ret
     total = sum(outcomes.values())
     findings = []
     if total:
-        for outcome, advice in (("timed_out", "Replies are arriving too slowly or the wait limit is short: consider reminders or a longer SIF_WAIT_TIMEOUT_MINUTES."),
+        for outcome, advice in (("timed_out", "Replies are arriving too slowly or the wait limit is short: consider reminders or a longer SIS_WAIT_TIMEOUT_MINUTES."),
                                 ("bounced", "Many tickets lack detail: add a ticket template or acceptance-criteria checklist."),
                                 ("failed", "Agent runs are failing: look at the top errors below and consider a lesson or environment fix."),
                                 ("killed", "Runs are being stopped by hand: check budgets and whether tasks are scoped too widely.")):

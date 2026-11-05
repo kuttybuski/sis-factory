@@ -11,14 +11,14 @@ import re
 from datetime import date
 from typing import Any
 
-_START, _END = "<!-- sif:lessons:start -->", "<!-- sif:lessons:end -->"  # the managed block in AGENTS.md
-HEADING = "## Lessons learned (proposed by sif in a daily PR; delete a line to drop that rule)"
-_TAG = re.compile(r"\(sif L(\d+)\)")
+_START, _END = "<!-- sis:lessons:start -->", "<!-- sis:lessons:end -->"  # the managed block in AGENTS.md
+HEADING = "## Lessons learned (proposed by sis in a daily PR; delete a line to drop that rule)"
+_TAG = re.compile(r"\(sis L(\d+)\)")
 _PLACEHOLDER = "_No approved lessons yet._"
 
 
 def line(lesson: dict[str, Any]) -> str:
-    return f"- {lesson['text']} _(sif L{lesson['id']})_"
+    return f"- {lesson['text']} _(sis L{lesson['id']})_"
 
 
 def append_lessons(existing: str, lessons: list[dict[str, Any]]) -> str:
@@ -55,7 +55,7 @@ def file_patch(path: str, old: str | None, new: str) -> str:
 
 
 def title(repo: str, n: int, day: date) -> str:
-    return f"sif: {n} lesson{'s' if n != 1 else ''} learned in {repo} ({day.isoformat()})"
+    return f"sis: {n} lesson{'s' if n != 1 else ''} learned in {repo} ({day.isoformat()})"
 
 
 def pr_body(lessons: list[dict[str, Any]], path: str) -> str:
@@ -69,4 +69,4 @@ def pr_body(lessons: list[dict[str, Any]], path: str) -> str:
         rows.append(f"- **L{l['id']}** {l['text']}\n  _Why:_ {why}.{ev}{src}")
     return (f"What the factory learned since its last knowledge PR, added to `{path}` so every agent working here follows it.\n\n" + "\n".join(rows) +
             "\n\n**How to decide:** merge to adopt these rules. Delete a line before merging to reject that rule, or close the PR to reject all of them. "
-            "Rules you adopt are kept here, under review like code; the factory stops sending them separately.\n\n---\nOpened by sif. A person must review and merge it.")
+            "Rules you adopt are kept here, under review like code; the factory stops sending them separately.\n\n---\nOpened by sis. A person must review and merge it.")

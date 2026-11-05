@@ -8,7 +8,7 @@ import time
 import httpx
 
 MOCK, PORTAL, GATEWAY_PROV = "http://mock-externals:8080", "http://portal-api:8000", "http://sandbox-provisioner:8080"
-INGEST, INTERNAL = os.environ["SIF_INGEST_TOKEN"], os.environ["SIF_INTERNAL_TOKEN"]
+INGEST, INTERNAL = os.environ["SIS_INGEST_TOKEN"], os.environ["SIS_INTERNAL_TOKEN"]
 H_INGEST, H_INTERNAL = {"Authorization": f"Bearer {INGEST}"}, {"Authorization": f"Bearer {INTERNAL}"}
 results: list[tuple[str, bool, str]] = []
 
@@ -78,10 +78,10 @@ BASE = "The add helper in src/app.py has its operands in the wrong order for our
 async def scenario_question_to_pr(r: Run):
     await r.create("PAY-1", "Fix add helper", BASE + "ask: Should I keep the function signature unchanged?\nedit src/app.py: replace \"a + b\" with \"b + a\"")
     await r.has_comment("PAY-1", "Should I keep the function signature unchanged?")
-    assert "sif-picked" in await r.labels("PAY-1") and "sif" not in await r.labels("PAY-1"), "the trigger label should be swapped for sif-picked"
-    await r.reply("PAY-1", "@sif Yes, keep it unchanged.")
+    assert "sis-picked" in await r.labels("PAY-1") and "sis" not in await r.labels("PAY-1"), "the trigger label should be swapped for sis-picked"
+    await r.reply("PAY-1", "@sis Yes, keep it unchanged.")
     t = await r.outcome("PAY-1", "pr_opened")
-    pull = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sif/PAY-1"))
+    pull = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sis/PAY-1"))
     assert pull["draft"] is True and pull["base"] == "main" and "draft" in pull["body"], pull
     branch = (await r.c.get(f"{MOCK}/mock/branch/acme/api/{pull['head']}")).json()
     assert branch["exists"] and "-    return a + b" in branch["diff"] and "+    return b + a" in branch["diff"], branch
@@ -99,16 +99,16 @@ async def scenario_question_to_pr(r: Run):
 async def scenario_timeout_and_strangers(r: Run):
     await r.create("PAY-2", "Needs an answer", BASE + "ask: Which of the two modules should I change?")
     await r.has_comment("PAY-2", "Which of the two modules should I change?")
-    await r.reply("PAY-2", "@sif Change the first one.", account="stranger-9", name="Eve")  # not the reporter, not on any list: ignored
+    await r.reply("PAY-2", "@sis Change the first one.", account="stranger-9", name="Eve")  # not the reporter, not on any list: ignored
     t = await r.outcome("PAY-2", "timed_out", timeout=120)
     assert "wait.timed_out" in types(t) and "agent.answered" not in types(t), types(t)
     async def relabelled():  # the outcome is recorded just before the label is swapped, so give the Jira write a moment
         labels = await r.labels("PAY-2")
-        return "sif-timed-out" in labels and "sif-picked" not in labels
-    await until(relabelled, "PAY-2 to carry sif-timed-out instead of sif-picked", 30)
+        return "sis-timed-out" in labels and "sis-picked" not in labels
+    await until(relabelled, "PAY-2 to carry sis-timed-out instead of sis-picked", 30)
     await r.has_comment("PAY-2", "shut the sandbox down")
     await r.sandbox_gone("PAY-2")
-    assert not [p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sif/PAY-2")], "a timed-out task must not open a PR"
+    assert not [p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sis/PAY-2")], "a timed-out task must not open a PR"
 
 
 async def scenario_kill_from_the_dashboard(r: Run):
@@ -125,8 +125,8 @@ async def scenario_kill_from_the_dashboard(r: Run):
 async def scenario_budget_pause_and_approval(r: Run):
     await r.create("PAY-4", "Spend some budget", BASE + "llm: 3\nedit src/app.py: replace \"a + b\" with \"b + a\"")
     await r.has_comment("PAY-4", "Budget of $2.00 reached", timeout=60)
-    assert not [p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sif/PAY-4")], "no PR before the human decides"
-    await r.reply("PAY-4", "@sif approve")
+    assert not [p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sis/PAY-4")], "no PR before the human decides"
+    await r.reply("PAY-4", "@sis approve")
     t = await r.outcome("PAY-4", "pr_opened")
     asked = next(e for e in t["events"] if e["type"] == "agent.asked_question")
     answered = next(e for e in t["events"] if e["type"] == "agent.answered")
@@ -142,15 +142,15 @@ async def scenario_injected_ticket_is_stopped(r: Run):
     await r.has_comment("PAY-5", "attempt to instruct the agent")
 
     async def relabelled():  # the outcome is recorded just before the comment and label swap
-        return "sif-blocked" in await r.labels("PAY-5")
-    await until(relabelled, "PAY-5 to carry sif-blocked", 30)
+        return "sis-blocked" in await r.labels("PAY-5")
+    await until(relabelled, "PAY-5 to carry sis-blocked", 30)
 
 
 async def scenario_review_comments_and_ci_are_handled_until_merge(r: Run):
     """Humans only review: a change request and a CI failure each go back to the agent as a commit on the same PR; a merge ends the task."""
     await r.create("PAY-6", "Fix add helper", BASE + "edit src/app.py: replace \"a + b\" with \"b + a\"")
     await r.outcome("PAY-6", "pr_opened")
-    pull = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sif/PAY-6"))
+    pull = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sis/PAY-6"))
     n, head = pull["number"], pull["head"]
     diff = lambda: r.c.get(f"{MOCK}/mock/branch/acme/api/{head}")  # noqa: E731
 
@@ -195,17 +195,17 @@ async def scenario_review_comments_and_ci_are_handled_until_merge(r: Run):
     assert case["with_outcome"] == case["without_outcome"] == "done" and case["with"] > 0, case  # the scripted agent redoes the ticket's edit
 
     # The candidate goes into acme/api's next knowledge PR (CLAUDE.md). Merging it is the approval.
-    tag = f"(sif L{lesson['id']})"
+    tag = f"(sis L{lesson['id']})"
 
     async def adopted():
         for p in (await r.c.get(f"{MOCK}/mock/pulls")).json():
-            if p["head"].startswith("sif/knowledge-") and p["state"] == "open":
+            if p["head"].startswith("sis/knowledge-") and p["state"] == "open":
                 await r.c.post(f"{MOCK}/mock/pulls/{p['number']}/merge")  # the reviewer merges whatever knowledge PR is open
         mine = next(l for l in (await r.c.get(f"{PORTAL}/api/lessons")).json() if l["id"] == lesson["id"])
         return mine["status"] == "approved" and mine["in_repo"] and mine
     got = await until(adopted, "the lesson to be adopted through its knowledge PR", 60, 2)
     assert got["approver"] == "rae", got  # the mock's merger
-    pr = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sif/knowledge-") and f"L{lesson['id']}" in p["body"])
+    pr = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sis/knowledge-") and f"L{lesson['id']}" in p["body"])
     assert tag in (await r.c.get(f"{MOCK}/mock/branch/acme/api/{pr['head']}")).json()["diff"]
     assert types(t).count("pr.updated") == 2 and "pr.merged" in types(t), types(t)
     await r.has_comment("PAY-6", "was merged")
@@ -230,17 +230,17 @@ async def scenario_story_with_intent_and_design(r: Run):
     """Team 'Pipeline' wants intent.md and design.md on stories, each approved by a person: intent (with one round of feedback) -> architect -> developer."""
     await r.create("PIP-2", "Fix add helper", BASE + "edit src/app.py: replace \"a + b\" with \"b + a\"", type="Story")
     await r.has_comment("PIP-2", "review of intent.md")
-    await r.reply("PIP-2", "@sif Please add what is out of scope.")
+    await r.reply("PIP-2", "@sis Please add what is out of scope.")
     await r.has_comment("PIP-2", "review of intent.md", times=2)
-    await r.reply("PIP-2", "@sif approve")
+    await r.reply("PIP-2", "@sis approve")
     await r.has_comment("PIP-2", "review of design.md")
-    await r.reply("PIP-2", "@sif approve")
+    await r.reply("PIP-2", "@sis approve")
     t = await r.outcome("PIP-2", "pr_opened", timeout=150)
     assert types(t).count("stage.started") == 4, types(t)  # intent, intent again after feedback, architect, developer
-    pull = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sif/PIP-2"))
+    pull = next(p for p in (await r.c.get(f"{MOCK}/mock/pulls")).json() if p["head"].startswith("sis/PIP-2"))
     branch = (await r.c.get(f"{MOCK}/mock/branch/acme/api/{pull['head']}")).json()
     diff = branch["diff"]
-    assert "docs/sif/PIP-2/intent.md" in diff and "docs/sif/PIP-2/design.md" in diff and "+    return b + a" in diff, diff[:800]
+    assert "docs/sis/PIP-2/intent.md" in diff and "docs/sis/PIP-2/design.md" in diff and "+    return b + a" in diff, diff[:800]
     assert "Revised after feedback: Please add what is out of scope" in diff or "Revised after feedback" in diff, diff[:800]
     await r.sandbox_gone("PIP-2")
 
@@ -250,7 +250,7 @@ async def scenario_epic_is_split_into_stories(r: Run):
     await r.create("PIP-1", "Resilient billing", "Make the billing job resilient to flaky downstream calls so that nightly runs finish.\nRepo: acme/api\nstory: Add backoff to retries\nstory: Add a circuit breaker", type="Epic")
     await r.has_comment("PIP-1", "proposed split")
     assert not [k for k, i in (await r.c.get(f"{MOCK}/mock/issues")).json().items() if i.get("parent") == "PIP-1"], "nothing is created before approval"
-    await r.reply("PIP-1", "@sif approve")
+    await r.reply("PIP-1", "@sis approve")
     t = await r.outcome("PIP-1", "split", timeout=60)
     assert "children.created" in types(t) and "pr.opened" not in types(t), types(t)
     kids = {k: i for k, i in (await r.c.get(f"{MOCK}/mock/issues")).json().items() if i.get("parent") == "PIP-1"}
@@ -259,11 +259,11 @@ async def scenario_epic_is_split_into_stories(r: Run):
 
     async def relabelled():  # the outcome is recorded just before the label is swapped
         labels = await r.labels("PIP-1")
-        return "sif-split" in labels and "sif-picked" not in labels
-    await until(relabelled, "PIP-1 to carry sif-split instead of sif-picked", 30)
+        return "sis-split" in labels and "sis-picked" not in labels
+    await until(relabelled, "PIP-1 to carry sis-split instead of sis-picked", 30)
 
     async def picked():  # the children were labelled for pickup, so the poller starts them as stories of the Pipeline team
-        return all(["sif-picked" in labels for labels in [await r.labels(k) for k in kids]])
+        return all(["sis-picked" in labels for labels in [await r.labels(k) for k in kids]])
     await until(picked, "the new stories to be picked up", 60)
 
 
@@ -276,7 +276,7 @@ async def scenario_team_connections(r: Run):
     bad = (await put("jira", {"config": jira, "secret": "bad-token"})).json()
     assert bad["status"] == "failed" and "rejected" in bad["detail"], bad
     good = (await put("jira", {"config": jira, "secret": "linked-jira-token"})).json()
-    assert good["status"] == "connected" and "Signed in as sif" in good["detail"] and "LNK" in good["detail"], good
+    assert good["status"] == "connected" and "Signed in as sis" in good["detail"] and "LNK" in good["detail"], good
 
     await r.create("LNK-1", "Fix add helper", BASE + "edit src/app.py: replace \"a + b\" with \"b + a\"")
     await r.outcome("LNK-1", "pr_opened", timeout=120)

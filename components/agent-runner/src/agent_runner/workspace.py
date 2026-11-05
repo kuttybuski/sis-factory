@@ -8,8 +8,8 @@ from pathlib import Path
 
 
 async def _git(cwd: Path, *args: str, input: bytes | None = None) -> bytes:
-    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(cwd.parent), "GIT_AUTHOR_NAME": "sif", "GIT_AUTHOR_EMAIL": "sif@localhost",
-           "GIT_COMMITTER_NAME": "sif", "GIT_COMMITTER_EMAIL": "sif@localhost", "GIT_CONFIG_NOSYSTEM": "1"}
+    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(cwd.parent), "GIT_AUTHOR_NAME": "sis", "GIT_AUTHOR_EMAIL": "sis@localhost",
+           "GIT_COMMITTER_NAME": "sis", "GIT_COMMITTER_EMAIL": "sis@localhost", "GIT_CONFIG_NOSYSTEM": "1"}
     p = await asyncio.create_subprocess_exec("git", *args, cwd=cwd, env=env, stdin=asyncio.subprocess.PIPE if input else None,
                                              stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     out, err = await p.communicate(input)

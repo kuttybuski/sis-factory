@@ -1,5 +1,5 @@
 [project]
-name = "sif"
+name = "sis"
 version = "0.1.0"
 description = "Modular, lightweight enterprise software factory"
 requires-python = ">=3.12"

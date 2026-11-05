@@ -16,7 +16,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from sif_context.learn import ReviewNote, _jaccard, _words
+from sis_context.learn import ReviewNote, _jaccard, _words
 
 # ---- reading the event log --------------------------------------------------------------------
 

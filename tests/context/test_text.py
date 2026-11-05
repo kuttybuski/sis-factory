@@ -1,5 +1,5 @@
-from sif_context.models import approx_tokens
-from sif_context.text import html_to_blocks, html_to_chunks, md_to_chunks
+from sis_context.models import approx_tokens
+from sis_context.text import html_to_blocks, html_to_chunks, md_to_chunks
 
 PAGE = """
 <h1>Payments service</h1>

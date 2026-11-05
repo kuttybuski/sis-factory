@@ -17,9 +17,9 @@ base, overlay = (yaml.safe_load(open(f)) for f in sys.argv[1:3])
 c = merge(base, overlay)
 for svc in c["services"].values():
     svc.pop("ports", None)  # never collide with a running dev stack
-    if "environment" in svc and isinstance(svc["environment"], dict) and "SIF_SANDBOX_NETWORK" in svc["environment"]:
-        svc["environment"]["SIF_SANDBOX_NETWORK"] = "sife2e-sandboxes"
-c["networks"]["sandboxes"]["name"] = "sife2e-sandboxes"
+    if "environment" in svc and isinstance(svc["environment"], dict) and "SIS_SANDBOX_NETWORK" in svc["environment"]:
+        svc["environment"]["SIS_SANDBOX_NETWORK"] = "sise2e-sandboxes"
+c["networks"]["sandboxes"]["name"] = "sise2e-sandboxes"
 c["services"]["embeddings"].setdefault("environment", {})["EMBEDDINGS_BACKEND"] = "hash"  # the model download is not part of this test
 c["services"]["3d-view"]["profiles"] = ["never"]  # not needed here
 c["services"]["portal-web"]["profiles"] = ["never"]

@@ -2,14 +2,14 @@
 
 Pages with read restrictions are skipped, and so is everything under them (restrictions are inherited). The connector reads as one
 account, so a restricted page it can see would otherwise be searchable by every task of the team, and could end up quoted in a PR that
-people without access read. SIF_CONFLUENCE_RESTRICTED=index keeps them (only for spaces whose readers all may see everything)."""
+people without access read. SIS_CONFLUENCE_RESTRICTED=index keeps them (only for spaces whose readers all may see everything)."""
 
 from collections.abc import AsyncIterator
 
 import httpx
 
-from sif_context.models import DocIn
-from sif_context.text import html_to_chunks
+from sis_context.models import DocIn
+from sis_context.text import html_to_chunks
 
 PAGE_LIMIT = 50
 MAX_PAGES_PER_SPACE = 5000

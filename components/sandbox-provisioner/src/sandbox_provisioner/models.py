@@ -27,9 +27,9 @@ class SandboxSpec(BaseModel):
     @field_validator("env")
     @classmethod
     def _env(cls, v: dict[str, str]) -> dict[str, str]:
-        bad = [k for k in v if not re.fullmatch(r"SIF_[A-Z0-9_]{1,60}", k)]
+        bad = [k for k in v if not re.fullmatch(r"SIS_[A-Z0-9_]{1,60}", k)]
         if bad:
-            raise ValueError(f"only SIF_* variables may be set in a sandbox, not {bad}")  # no LD_PRELOAD, PATH, proxies...
+            raise ValueError(f"only SIS_* variables may be set in a sandbox, not {bad}")  # no LD_PRELOAD, PATH, proxies...
         return v
 
 

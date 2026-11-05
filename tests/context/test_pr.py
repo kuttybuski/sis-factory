@@ -1,4 +1,4 @@
-from sif_context.pr import Comment, FileChange, PRData, ReviewComment, jira_keys, pr_to_doc
+from sis_context.pr import Comment, FileChange, PRData, ReviewComment, jira_keys, pr_to_doc
 
 
 def pr(**kw):

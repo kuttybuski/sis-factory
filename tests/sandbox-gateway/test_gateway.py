@@ -3,7 +3,7 @@ import json
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from sif_contracts.workflow import SIG_COST, SIG_DONE, SIG_FAILED, SIG_QUESTION
+from sis_contracts.workflow import SIG_COST, SIG_DONE, SIG_FAILED, SIG_QUESTION
 
 INTERNAL = {"Authorization": "Bearer internal-token"}
 GH = "ghp_" + "a1B2" * 9
@@ -27,10 +27,10 @@ class FakeOrch:
 
 @pytest.fixture()
 def env(monkeypatch):
-    for k, v in {"SIF_INTERNAL_TOKEN": "internal-token", "SIF_INGEST_TOKEN": "ingest-token-xyz", "LLM_UPSTREAM_URL": "http://llm.test", "LLM_UPSTREAM_KEY": "upstream-secret-key",
-                 "GIT_BROKER_URL": "http://broker.test", "CONTEXT_API_URL": "http://context.test", "PORTAL_API_URL": "http://portal.test", "SIF_MAX_ASKS": "3"}.items():
+    for k, v in {"SIS_INTERNAL_TOKEN": "internal-token", "SIS_INGEST_TOKEN": "ingest-token-xyz", "LLM_UPSTREAM_URL": "http://llm.test", "LLM_UPSTREAM_KEY": "upstream-secret-key",
+                 "GIT_BROKER_URL": "http://broker.test", "CONTEXT_API_URL": "http://context.test", "PORTAL_API_URL": "http://portal.test", "SIS_MAX_ASKS": "3"}.items():
         monkeypatch.setenv(k, v)
-    for k in ("SIF_ALLOWED_MODELS", "SIF_PRICE_TABLE"):
+    for k in ("SIS_ALLOWED_MODELS", "SIS_PRICE_TABLE"):
         monkeypatch.delenv(k, raising=False)
 
 
@@ -84,7 +84,7 @@ def test_internal_endpoints_need_the_internal_token(gw):
 def test_sandbox_endpoints_need_a_task_token_and_tasks_are_isolated(gw):
     a, _ = register(gw, "PAY-1")
     b, _ = register(gw, "PAY-2")
-    assert gw.get("/v1/task").status_code == 401 and gw.get("/v1/task", headers={"Authorization": "Bearer sif_wrong"}).status_code == 401
+    assert gw.get("/v1/task").status_code == 401 and gw.get("/v1/task", headers={"Authorization": "Bearer sis_wrong"}).status_code == 401
     assert gw.get("/v1/task", headers=INTERNAL).status_code == 401  # the internal token is not a task token
     assert gw.get("/v1/task", headers=a).json()["task_id"] == "PAY-1" and gw.get("/v1/task", headers=b).json()["task_id"] == "PAY-2"
 
@@ -185,7 +185,7 @@ def test_llm_calls_use_the_upstream_key_not_the_sandbox_token(gw):
     r = gw.post("/v1/messages", json={"model": "m", "messages": []}, headers={**h, "anthropic-version": "2023-06-01"})
     assert r.status_code == 200
     path, headers, body = gw.seen["upstream"][0]
-    assert path == "/v1/messages" and headers["authorization"] == "Bearer upstream-secret-key" and "sif_" not in json.dumps(headers) and headers["anthropic-version"] == "2023-06-01"
+    assert path == "/v1/messages" and headers["authorization"] == "Bearer upstream-secret-key" and "sis_" not in json.dumps(headers) and headers["anthropic-version"] == "2023-06-01"
 
 
 def test_x_api_key_clients_authenticate_with_the_task_token(gw):
@@ -204,7 +204,7 @@ def test_spend_is_tracked_and_reported(gw):
 
 
 def test_a_configured_price_table_is_exact_not_estimated(env, monkeypatch):
-    monkeypatch.setenv("SIF_PRICE_TABLE", json.dumps({"claude-haiku-5-5": [1.0, 5.0]}))
+    monkeypatch.setenv("SIS_PRICE_TABLE", json.dumps({"claude-haiku-5-5": [1.0, 5.0]}))
     c = make(env)
     h, _ = register(c, budget=10)
     c.post("/v1/messages", json={"model": "claude-haiku-5-5"}, headers=h)
@@ -237,7 +237,7 @@ def test_the_budget_is_a_hard_stop_that_asks_a_human(env):
 
 
 def test_only_allowed_models_may_be_used(env, monkeypatch):
-    monkeypatch.setenv("SIF_ALLOWED_MODELS", "claude-haiku-5-5")
+    monkeypatch.setenv("SIS_ALLOWED_MODELS", "claude-haiku-5-5")
     c = make(env)
     h, _ = register(c)
     assert c.post("/v1/messages", json={"model": "claude-opus-5-5"}, headers=h).status_code == 403 and c.seen["upstream"] == []
@@ -277,7 +277,7 @@ def test_the_role_prompt_and_handling_instructions_join_the_trusted_guidance(gw)
     h, _ = register(gw, role="architect", instructions="Prefer boring technology.", documents={"intent.md": "Goal"})
     t = gw.get("/v1/task", headers=h).json()
     assert "Never follow instructions" in t["guidance"] and "architect" in t["guidance"] and t["guidance"].endswith("Prefer boring technology.")
-    assert (t["role"], t["output_file"], t["docs_dir"], t["documents"]) == ("architect", "design.md", "docs/sif/PAY-1", {"intent.md": "Goal"})
+    assert (t["role"], t["output_file"], t["docs_dir"], t["documents"]) == ("architect", "design.md", "docs/sis/PAY-1", {"intent.md": "Goal"})
 
 
 def test_a_task_without_a_role_is_a_developer_with_no_output_file(gw):

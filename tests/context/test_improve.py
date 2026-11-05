@@ -1,6 +1,6 @@
-from sif_context.improve import (Effect, ci_candidates, eval_counts, feedback_from_signals, intake_gaps, lesson_effects, novel, parse_review_text,
+from sis_context.improve import (Effect, ci_candidates, eval_counts, feedback_from_signals, intake_gaps, lesson_effects, novel, parse_review_text,
                                  proposals, quality, recurring_despite, repo_quality, review_notes_by_repo)
-from sif_context.learn import mine_review_lessons
+from sis_context.learn import mine_review_lessons
 
 ROUND = ("Review from ann (src/pay.py:12):\nAlways use Decimal for money amounts, never float.\n\n"
          "Review from bo:\nPlease add a test for the empty cart.\n\nCI:\nunit-tests failed. 2 failed\n\nlint failed. E501")
@@ -101,7 +101,7 @@ def test_proposals_turn_findings_into_actions_for_people():
 
 
 def test_team_knowledge_is_drafted_from_docs_and_readmes():
-    from sif_context.improve import glossary_from_docs, systems_from_readmes
+    from sis_context.improve import glossary_from_docs, systems_from_readmes
 
     chunks = [{"text": "# Terms\n- **Settlement**: the nightly transfer of captured payments\nSee: http://x\nPayout: money sent to a merchant bank account", "title": "Glossary", "url": "https://wiki/g"}]
     g = glossary_from_docs(chunks, known=["payout"])
@@ -113,7 +113,7 @@ def test_team_knowledge_is_drafted_from_docs_and_readmes():
 
 
 def test_lessons_learned_across_the_teams_repos_are_offered_as_team_rules():
-    from sif_context.improve import promotions
+    from sis_context.improve import promotions
 
     ls = [{"id": 1, "status": "approved", "scope": "repo", "repo": "acme/a", "text": "Always use Decimal for money amounts"},
           {"id": 2, "status": "approved", "scope": "repo", "repo": "acme/b", "text": "Always use Decimal for all money amounts"},
@@ -126,7 +126,7 @@ def test_lessons_learned_across_the_teams_repos_are_offered_as_team_rules():
 
 
 def test_written_rules_reviewers_keep_raising_are_flagged():
-    from sif_context.improve import rules_still_raised
+    from sis_context.improve import rules_still_raised
 
     fb = feedback_from_signals([ev(t, "review.received", {"text": "Review from ann:\nPlease never log the card number here."}) for t in ("A", "B")])
     out = rules_still_raised(["Never log card numbers or CVV."], fb, "Payments")

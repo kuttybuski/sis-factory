@@ -1,5 +1,5 @@
 """One run of the self-improvement cycle: read what happened to the factory's work, propose lessons, measure the lessons in use, retire
-machine-proposed lessons that measurably hurt, and write down proposals for people. The analysis is pure (sif_context.improve); this
+machine-proposed lessons that measurably hurt, and write down proposals for people. The analysis is pure (sis_context.improve); this
 module only reads and writes.
 
 What it may change on its own is deliberately small: it can add *candidate* lessons (a person approves them), and it can disable an approved
@@ -9,19 +9,19 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from sif_context import improve as I
-from sif_context.learn import EvalReport, mine_review_lessons, passes_gate
-from sif_contracts import Settings
-from sif_contracts import lessons as L
+from sis_context import improve as I
+from sis_context.learn import EvalReport, mine_review_lessons, passes_gate
+from sis_contracts import Settings
+from sis_contracts import lessons as L
 
 from portal_api import db
 
-BOT = "sif-improve"
+BOT = "sis-improve"
 
 
 async def run_cycle(p, s: Settings, *, propose: Callable[..., Awaitable[dict[str, Any] | None]], trigger: str,
                     replay: Callable[[int], Awaitable[dict[str, Any] | None]] | None = None) -> dict[str, Any]:
-    """replay (SIF_EVAL_AUTO): asks for a replay of every lesson this run proposes, so it arrives on the Learning page already judged."""
+    """replay (SIS_EVAL_AUTO): asks for a replay of every lesson this run proposes, so it arrives on the Learning page already judged."""
     signals = await db.learning_signals(p, days=s.improve_days)
     feedback = I.feedback_from_signals(signals)
     lessons = await db.list_lessons(p, status=None, limit=5000)

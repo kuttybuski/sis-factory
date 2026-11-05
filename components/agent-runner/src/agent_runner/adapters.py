@@ -108,7 +108,7 @@ class ScriptedAdapter:
 
 
 # ------------------------------------------------------------------------------------ Claude Code
-SYSTEM_SUFFIX = ("When you need a decision or information a human has, run `sif-ask \"<your question>\"` and wait for the answer; do not guess. "
+SYSTEM_SUFFIX = ("When you need a decision or information a human has, run `sis-ask \"<your question>\"` and wait for the answer; do not guess. "
                  "Stay within the ticket. Never change CI configuration or CODEOWNERS. Run the project's tests before you finish if you changed code.")
 
 
@@ -128,13 +128,13 @@ class ClaudeCodeAdapter:
         else:  # a document role writes exactly one file: anything else it changes is discarded, because only the document is sent back
             prompt = head + (f"Earlier documents are in {task.docs_dir}/; if a previous draft of {task.output_file} is there, revise it using the reviewer feedback above. "
                              if task.documents else "") + f"Write {task.output_file} in the repository root and change nothing else."
-            tools = "Read,Write,Glob,Grep,Bash"  # Bash so it can still run sif-ask
+            tools = "Read,Write,Glob,Grep,Bash"  # Bash so it can still run sis-ask
         return [self.binary, "-p", prompt, "--output-format", "stream-json", "--verbose", "--model", self.model, "--permission-mode", "acceptEdits",
                 "--allowedTools", tools, "--append-system-prompt", f"{task.guidance}\n\n{SYSTEM_SUFFIX}"]
 
     def environment(self) -> dict[str, str]:
         return {"PATH": os.environ.get("PATH", ""), "HOME": os.environ.get("HOME", "/workspace"), "ANTHROPIC_BASE_URL": self.gateway_url,
-                "ANTHROPIC_AUTH_TOKEN": self.token, "SIF_GATEWAY_URL": self.gateway_url, "SIF_TASK_TOKEN": self.token,
+                "ANTHROPIC_AUTH_TOKEN": self.token, "SIS_GATEWAY_URL": self.gateway_url, "SIS_TASK_TOKEN": self.token,
                 "DISABLE_TELEMETRY": "1", "DISABLE_AUTOUPDATER": "1", "DISABLE_ERROR_REPORTING": "1", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"}
 
     async def run(self, gw: Gateway, task: Task, repo: Path, context_file: Path) -> Outcome:

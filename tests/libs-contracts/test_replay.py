@@ -1,4 +1,4 @@
-from sif_contracts.replay import changed_lines, files, score
+from sis_contracts.replay import changed_lines, files, score
 
 REF = """diff --git a/src/app.py b/src/app.py
 index 1..2 100644

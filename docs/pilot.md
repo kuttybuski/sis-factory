@@ -5,11 +5,11 @@ rounds that takes, and what each merged change costs. The Overview page's **Scor
 repository claims a number until a pilot produces one.
 
 1. **Pick one repository and one team** with a working CI and tickets that are usually one to three days of work.
-2. **Run the real agent**: `SIF_AGENT=claude`, build agent-runner with `INSTALL_CLAUDE=true`, and set `LLM_UPSTREAM_URL` / `LLM_UPSTREAM_KEY`
+2. **Run the real agent**: `SIS_AGENT=claude`, build agent-runner with `INSTALL_CLAUDE=true`, and set `LLM_UPSTREAM_URL` / `LLM_UPSTREAM_KEY`
    (a model endpoint inside your network works the same way). The dashboard warns on every page while the demo agent is in use.
 3. **Give it 50–100 tickets** the team would have done anyway, written as usual. Do not pre-clean them: thin tickets get a question, and
    how often that happens is part of the result.
-4. **Review as normal.** Request changes on the PR or mention `@sif` in a PR comment; failing CI is picked up by itself. Merge or close.
+4. **Review as normal.** Request changes on the PR or mention `@sis` in a PR comment; failing CI is picked up by itself. Merge or close.
 5. **Read the scorecard after 30 days.** Merged ÷ (merged + closed) is the merge rate; *rounds / merge* is how often reviewers had to send
    work back; *not delivered* are tickets that never produced a PR (bounced, failed, timed out, stopped). Compare *per merged PR* with
    what the same work costs in engineering time.

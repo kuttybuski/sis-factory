@@ -1,6 +1,6 @@
 """Personal data is taken out of documents before they are indexed: the index is searched for every task and its text is sent to the model
 and can end up in PRs. Payment card numbers (Luhn-checked), US social security numbers, IBANs and email addresses are replaced by a
-placeholder. SIF_REDACT_PII picks which (comma-separated; "none" turns it off)."""
+placeholder. SIS_REDACT_PII picks which (comma-separated; "none" turns it off)."""
 
 import os
 import re
@@ -29,7 +29,7 @@ def _iban_ok(s: str) -> bool:
 
 
 def enabled(env: dict[str, str] | None = None) -> tuple[str, ...]:
-    v = (env if env is not None else os.environ).get("SIF_REDACT_PII", ",".join(KINDS)).lower()
+    v = (env if env is not None else os.environ).get("SIS_REDACT_PII", ",".join(KINDS)).lower()
     return () if v in ("", "none", "off", "false") else tuple(k for k in KINDS if k in v.split(","))
 
 

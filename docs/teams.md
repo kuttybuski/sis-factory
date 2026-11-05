@@ -6,8 +6,8 @@ so they are listed, retained and searched apart from other teams' in Temporal. T
 ## Creating a team
 
 On the dashboard, **Teams** -> **Create team**: a name, the team's Jira project keys, its repositories (`owner/name`) and, optionally,
-Confluence spaces. Saving registers the namespace in Temporal (retention `SIF_NAMESPACE_RETENTION_DAYS`, default 30). The workers look for
-new namespaces every `SIF_NAMESPACE_REFRESH_SECONDS` (default 15) and start serving them, with no restart.
+Confluence spaces. Saving registers the namespace in Temporal (retention `SIS_NAMESPACE_RETENTION_DAYS`, default 30). The workers look for
+new namespaces every `SIS_NAMESPACE_REFRESH_SECONDS` (default 15) and start serving them, with no restart.
 
 Rules checked when you save:
 
@@ -27,7 +27,7 @@ team and sent to its agents (docs/team-knowledge.md).
 The **Team** picker in the dashboard's top bar, next to **3D view**, is the outermost filter. Pick a team and every page shows only that
 team: Overview, Cost, History, Workflows (pinned to its namespace), Handling (its overrides; *All teams* edits the factory defaults),
 Connections, Teams, Learning (its retro, budgets and lessons, plus global, repo and path lessons) and Context (its sources and searches).
-The 3D view link opens with `?team=<name>`, so the live floor shows only that team's tasks. The choice is kept in a cookie (`sif_team`)
+The 3D view link opens with `?team=<name>`, so the live floor shows only that team's tasks. The choice is kept in a cookie (`sis_team`)
 for a year and is per browser; it is a view filter, not access control.
 
 ## Watching workflows
@@ -42,7 +42,7 @@ task's dashboard page does (stop the sandbox, record who asked). The 3D view's K
 
 A task waiting for a reply can also be answered in the 3D view's panel. The answer goes through the dashboard (`/answer`: the same people
 who may kill the task, recorded in the audit log), and jira-connector posts it on the ticket as a comment *before* giving it to the
-task, so Jira keeps the whole conversation even if Temporal's history is lost. With `SIF_DRY_RUN=true` the comment is only logged.
+task, so Jira keeps the whole conversation even if Temporal's history is lost. With `SIS_DRY_RUN=true` the comment is only logged.
 
 ## API
 
@@ -54,4 +54,4 @@ task, so Jira keeps the whole conversation even if Temporal's history is lost. W
 | `GET /api/intake`, `PUT /api/intake/pause`, `DELETE /api/intake/pause/{team}` | intake pauses (`*` = every team) and per-team counts |
 | `DELETE /api/teams/{name}` | refused while the team has running tasks |
 
-Writes need the dashboard token (`SIF_DASHBOARD_TOKEN`, held by the dashboard server only). Creating, changing and deleting teams needs the admin role once sign-in is on (docs/security.md).
+Writes need the dashboard token (`SIS_DASHBOARD_TOKEN`, held by the dashboard server only). Creating, changing and deleting teams needs the admin role once sign-in is on (docs/security.md).

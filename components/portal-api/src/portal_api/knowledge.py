@@ -1,4 +1,4 @@
-"""Team knowledge: what a team writes down about how it works, delivered to its agents as trusted instructions (sif_contracts.knowledge).
+"""Team knowledge: what a team writes down about how it works, delivered to its agents as trusted instructions (sis_contracts.knowledge).
 
 Writes need the ingest token (the dashboard server holds it, and checks the operator role first). Every save is screened like a lesson,
 because the text becomes part of the agent's instructions: an injection attempt or a secret is refused, a suspicious phrase is saved but
@@ -12,8 +12,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from injection_guard import Verdict, check_outbound, scan
-from sif_context import improve as I
-from sif_contracts import knowledge as K
+from sis_context import improve as I
+from sis_contracts import knowledge as K
 
 from portal_api import db
 from portal_api.auth import dashboard_guard, pool
