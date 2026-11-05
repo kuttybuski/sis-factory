@@ -1,0 +1,16 @@
+[project]
+name = "jira-connector"
+version = "0.1.0"
+description = "The only holder of Jira credentials: picks up labelled tickets, relays @sif replies, posts comments"
+requires-python = ">=3.12"
+dependencies = ["fastapi>=0.115", "uvicorn>=0.30", "httpx>=0.27", "temporalio>=1.7", "sif-contracts"]
+
+[tool.uv.sources]
+sif-contracts = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jira_connector"]

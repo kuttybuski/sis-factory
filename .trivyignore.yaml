@@ -1,0 +1,10 @@
+# Findings the CI scan (.github/workflows/ci.yml) accepts, each with the reason. Anything not listed fails the build.
+misconfigurations:
+  - id: DS002
+    paths: ["components/sandbox-provisioner/Dockerfile"]
+    statement: >-
+      Local only: root inside the container is the user's own account under rootless Podman, which owns the Podman socket. On Kubernetes
+      the chart runs it non-root with a service account limited to the sandbox namespace (docs/security.md).
+  - id: DS002
+    paths: ["tests/Dockerfile", "tests/e2e/mocks/Dockerfile"]
+    statement: Test images, never deployed.

@@ -1,0 +1,20 @@
+image:
+  repository: localhost/sif-context-ingest
+  tag: latest
+replicas: 1
+port: 8080
+env:
+  PORTAL_API_URL: "http://portal-api:8000"
+  EMBEDDINGS_URL: "http://embeddings:8080"
+# Secrets are never inlined. Create them with your secret manager (see components/secrets) and list them here.
+envFromSecrets: []          # for example [sif-database, sif-integrations]
+allowFrom:                  # who may call this service
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: sif-platform
+# Egress: DNS, Postgres, and HTTPS to Atlassian and GitHub (the only component that needs the internet besides the LLM gateway).
+egressPorts: [443]
+databasePort: 5432
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { cpu: "1", memory: 512Mi }

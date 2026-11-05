@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sif-sandbox-runtime
+description: RuntimeClass for gVisor (runsc). Node-level runsc install is done by the node image or installer.
+type: application
+version: 0.1.0

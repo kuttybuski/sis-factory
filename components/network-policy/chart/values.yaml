@@ -1,0 +1,10 @@
+sandboxNamespace: sif-sandboxes
+gateway:
+  namespace: sif-platform
+  podLabels:
+    app.kubernetes.io/name: sandbox-gateway
+  port: 8080
+dns:
+  namespace: kube-system
+  podLabels:
+    k8s-app: kube-dns

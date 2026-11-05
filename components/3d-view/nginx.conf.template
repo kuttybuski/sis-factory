@@ -1,0 +1,27 @@
+# A template: the nginx image fills in ${NGINX_LOCAL_RESOLVERS} from /etc/resolv.conf, so portal-api is looked up when a request comes,
+# not when nginx starts (it may start first).
+server {
+    listen 8080;
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=30s;
+    server_tokens off;
+    add_header X-Frame-Options DENY always;
+    add_header Content-Security-Policy "frame-ancestors 'none'" always;
+    add_header X-Content-Type-Options nosniff always;
+
+    location = /3d { return 301 /3d/; }
+    location /3d/ {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /3d/index.html;
+    }
+    # Reads only: the 3D view needs the event stream and task lists, never a write.
+    location /3d/api/ {
+        limit_except GET { deny all; }
+        set $portal http://portal-api:8000;
+        rewrite ^/3d/api/(.*)$ /api/$1 break;
+        proxy_pass $portal;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_buffering off;  # server-sent events
+        proxy_read_timeout 1h;
+    }
+}

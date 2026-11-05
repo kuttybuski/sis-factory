@@ -1,0 +1,20 @@
+[project]
+name = "sif"
+version = "0.1.0"
+description = "Modular, lightweight enterprise software factory"
+requires-python = ">=3.12"
+
+[tool.uv.workspace]
+members = ["libs/contracts", "components/portal-api", "components/injection-guard", "libs/context", "components/embeddings", "components/context-api", "components/context-ingest", "components/git-broker", "components/sandbox-provisioner", "components/sandbox-gateway", "components/agent-runner", "components/orchestrator-worker", "components/jira-connector"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6", "httpx>=0.27", "pytest-asyncio>=0.24", "temporalio>=1.7"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["components/portal-api/src", "components/injection-guard/src"]
+
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,48 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: sif-sandbox-baseline
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: require-gvisor-runtime
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [{{ .Values.sandboxNamespace }}]
+      validate:
+        message: "Sandbox pods must use runtimeClassName {{ .Values.runtimeClassName }}."
+        pattern:
+          spec:
+            runtimeClassName: {{ .Values.runtimeClassName }}
+    - name: require-non-root-no-privilege
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [{{ .Values.sandboxNamespace }}]
+      validate:
+        message: "Sandbox pods must run as non-root, without privilege escalation, and without a service-account token."
+        pattern:
+          spec:
+            automountServiceAccountToken: false
+            securityContext:
+              runAsNonRoot: true
+            containers:
+              - securityContext:
+                  allowPrivilegeEscalation: false
+                  privileged: "false"
+    - name: deny-host-paths
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              namespaces: [{{ .Values.sandboxNamespace }}]
+      validate:
+        message: "hostPath volumes are not allowed in sandboxes."
+        pattern:
+          spec:
+            =(volumes):
+              - X(hostPath): "null"

@@ -1,0 +1,22 @@
+image:
+  repository: localhost/sif-portal-api
+  tag: latest
+replicas: 1
+port: 8000
+env:
+  # Required with SIF_ENV=production (sif_contracts/posture.py): a person approves every lesson, and retention is a decision.
+  SIF_LESSON_AUTO_APPROVE: "false"
+  SIF_RETENTION_DAYS: "90"          # event payloads of finished tasks (ticket text, agent output, code); 0 keeps them
+  SIF_AUDIT_RETENTION_DAYS: "400"   # audit rows; set to what your compliance policy requires (0 keeps them)
+# Secrets are never inlined. Create them with your secret manager (see components/secrets) and list them here.
+envFromSecrets: []          # for example [sif-database, sif-integrations]
+allowFrom:                  # who may call this service
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: sif-platform
+# Egress: DNS and Postgres only.
+egressPorts: []
+databasePort: 5432
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { cpu: "1", memory: 512Mi }

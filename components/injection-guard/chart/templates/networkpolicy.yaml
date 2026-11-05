@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: injection-guard
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: injection-guard }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        {{- toYaml .Values.allowFrom | nindent 8 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.port }}
+  egress: []  # the guard makes no outbound calls

@@ -1,0 +1,133 @@
+# Every push and pull request: the same `make` targets as on a laptop (Podman is on GitHub's Ubuntu runners), plus security scans.
+# On main and on tags, the images are also built, pushed to GitHub's registry, signed (keyless, cosign) and given an SBOM attestation,
+# so a deployment can verify what it runs came from this pipeline. Nothing here holds a secret beyond the job's own GITHUB_TOKEN.
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TRIVY_IMG: docker.io/aquasec/trivy:0.57.1
+  GITLEAKS_IMG: docker.io/zricethezav/gitleaks:v8.21.2
+  SEMGREP_IMG: docker.io/semgrep/semgrep:1.97.0
+
+jobs:
+  python:
+    name: Python tests (Postgres + Temporal)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: make test-py
+
+  web:
+    name: 3D view and dashboard
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: make test-3d
+      - run: make build-3d
+      - run: make test-3d-visual
+      - name: Screenshot differences
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: components/3d-view/test-results/
+          if-no-files-found: ignore
+      - name: Dashboard build (type check included)
+        run: podman build --target build -f components/portal-web/Dockerfile components/portal-web
+
+  charts:
+    name: Helm charts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: make lint-charts
+
+  security:
+    name: Security scans
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks reads the whole history
+      - name: Secrets in the git history (gitleaks)
+        run: podman run --rm -v "$PWD":/repo:ro "$GITLEAKS_IMG" git /repo --no-banner --redact
+      - name: Vulnerable dependencies, secrets and misconfigurations (Trivy; accepted findings in .trivyignore.yaml)
+        run: |
+          podman run --rm -v "$PWD":/repo:ro -w /repo "$TRIVY_IMG" fs --quiet --exit-code 1 --severity HIGH,CRITICAL \
+            --scanners vuln,secret,misconfig --ignorefile .trivyignore.yaml .
+      # Reviewed and excluded: the SQLAlchemy and formatted-SQL rules (portal-api uses psycopg; every interpolated fragment is a fixed
+      # string and values are parameters, see db.py), the Python 3.7 rule (3.12 only), the logger rule (it logs provider, team and error
+      # type, never the credential), and missing-user (Trivy checks that per file, with the reasons in .trivyignore.yaml).
+      # Helm templates are not YAML until rendered; `make lint-charts` and Trivy cover them.
+      - name: Static analysis (Semgrep)
+        run: |
+          podman run --rm -v "$PWD":/src:ro -w /src "$SEMGREP_IMG" semgrep scan --config p/default --metrics off --error --quiet \
+            --exclude tests --exclude 'components/*/chart/templates' \
+            --exclude-rule python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query \
+            --exclude-rule python.lang.security.audit.formatted-sql-query.formatted-sql-query \
+            --exclude-rule python.lang.compatibility.python37.python37-compatibility-importlib2 \
+            --exclude-rule python.lang.security.audit.logging.logger-credential-leak.python-logger-credential-disclosure \
+            --exclude-rule dockerfile.security.missing-user.missing-user
+      - name: Software bill of materials (CycloneDX)
+        run: podman run --rm -v "$PWD":/repo -w /repo "$TRIVY_IMG" fs --quiet --format cyclonedx --output sbom.cdx.json .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.cdx.json
+
+  images:
+    name: Signed images
+    if: github.event_name == 'push'
+    needs: [python, web, charts, security]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write  # push to ghcr.io
+      id-token: write  # keyless signing: the signature names this workflow and commit
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [3d-view, agent-runner, context-api, context-ingest, embeddings, git-broker, injection-guard, jira-connector,
+                    orchestrator-worker, portal-api, portal-web, sandbox-gateway, sandbox-provisioner]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sigstore/cosign-installer@v3
+      - name: Build, scan, push
+        id: push
+        env:
+          C: ${{ matrix.component }}
+        run: |
+          repo="ghcr.io/$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')/$C"
+          if [ "$C" = portal-web ]; then ctx=components/portal-web; else ctx=.; fi
+          podman build -t "$repo:$GITHUB_SHA" -f "components/$C/Dockerfile" "$ctx"
+          podman save "$repo:$GITHUB_SHA" -o image.tar
+          podman run --rm -v "$PWD":/w -w /w "$TRIVY_IMG" image --quiet --exit-code 1 --severity CRITICAL --ignore-unfixed --input image.tar
+          podman run --rm -v "$PWD":/w -w /w "$TRIVY_IMG" image --quiet --format cyclonedx --output sbom.cdx.json --input image.tar
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          podman push --digestfile digest "$repo:$GITHUB_SHA"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then podman tag "$repo:$GITHUB_SHA" "$repo:$GITHUB_REF_NAME" && podman push "$repo:$GITHUB_REF_NAME"; fi
+          echo "ref=$repo@$(cat digest)" >> "$GITHUB_OUTPUT"
+      - name: Sign and attest the SBOM
+        env:
+          REF: ${{ steps.push.outputs.ref }}
+        run: |
+          export DOCKER_CONFIG="$HOME/.cosign" && mkdir -p "$DOCKER_CONFIG" && cp "${XDG_RUNTIME_DIR}/containers/auth.json" "$DOCKER_CONFIG/config.json"
+          cosign sign --yes "$REF"
+          cosign attest --yes --type cyclonedx --predicate sbom.cdx.json "$REF"

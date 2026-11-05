@@ -1,0 +1,20 @@
+image:
+  repository: localhost/sif-embeddings
+  tag: latest
+replicas: 1
+port: 8080
+env:
+  EMBEDDINGS_BACKEND: "fastembed"
+  EMBEDDINGS_MODEL: "BAAI/bge-small-en-v1.5"
+# Secrets are never inlined. Create them with your secret manager (see components/secrets) and list them here.
+envFromSecrets: []          # for example [sif-database, sif-integrations]
+allowFrom:                  # who may call this service
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: sif-platform
+# Egress: DNS and HTTPS to huggingface.co on first start only. Pre-load the cache volume to run with no egress at all.
+egressPorts: [443]
+databasePort: 0
+resources:
+  requests: { cpu: 100m, memory: 128Mi }
+  limits: { cpu: "1", memory: 2Gi }

@@ -1,0 +1,6 @@
+.env
+**/node_modules
+**/dist
+**/.next
+.venv
+tests/e2e/out

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sif-network-policy
+description: Sandbox namespace with default-deny ingress/egress; only the sandbox-gateway is reachable
+type: application
+version: 0.1.0

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sif-portal-web
+description: Dashboard (Next.js)
+type: application
+version: 0.1.0

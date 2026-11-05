@@ -1,0 +1,17 @@
+# Weekly update PRs for what the build pulls in. CI (ci.yml) scans each one before a person merges it.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: uv
+    directory: /
+    schedule: { interval: weekly }
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: npm
+    directories: [/components/3d-view, /components/portal-web]
+    schedule: { interval: weekly }
+    groups: { npm: { patterns: ["*"] } }
+  - package-ecosystem: docker
+    directories: ["/components/*", /tests]
+    schedule: { interval: weekly }

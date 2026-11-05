@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sif-portal-api
+description: Task history, cost, lessons and live event stream
+type: application
+version: 0.1.0

@@ -1,0 +1,17 @@
+[project]
+name = "agent-runner"
+version = "0.1.0"
+description = "Runs inside the sandbox: fetches the task, runs a pluggable agent, asks humans through the gateway, hands back a patch"
+requires-python = ">=3.12"
+dependencies = ["httpx>=0.27"]
+
+[project.scripts]
+sif-ask = "agent_runner.cli:ask_main"
+sif-agent = "agent_runner.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_runner"]

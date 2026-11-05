@@ -1,0 +1,17 @@
+image:
+  repository: localhost/sif-injection-guard
+  tag: latest
+replicas: 2
+port: 8080
+# Thresholds (flag/block) per trust profile; see README. Empty = built-in defaults.
+thresholds: {}
+#  INJECTION_UNTRUSTED_FLAG: "25"
+#  INJECTION_UNTRUSTED_BLOCK: "60"
+# Only these namespaces/pods may call the guard. Sandboxes must never be listed.
+allowFrom:
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: sif-platform
+resources:
+  requests: { cpu: 50m, memory: 64Mi }
+  limits: { cpu: 500m, memory: 256Mi }

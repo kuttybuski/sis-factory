@@ -1,0 +1,13 @@
+# Secrets: never commit
+.env
+*.pem
+
+# Build and tool output
+node_modules/
+dist/
+.venv/
+__pycache__/
+tests/e2e/out/
+compose.e2e.generated.yaml
+backups/
+*.tsbuildinfo

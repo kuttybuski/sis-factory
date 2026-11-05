@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-gateway-and-dns
+  namespace: {{ .Values.sandboxNamespace }}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.gateway.namespace }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .Values.gateway.podLabels | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.gateway.port }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.dns.namespace }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .Values.dns.podLabels | nindent 14 }}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sif-context-ingest
+description: Syncs Confluence, GitHub and answered questions into the index
+type: application
+version: 0.1.0

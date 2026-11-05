@@ -1,0 +1,40 @@
+# Overlay for end-to-end runs: swaps Jira, the GitHub API and the LLM provider for local mocks. Use via `make e2e`.
+services:
+  mock-externals:
+    build:
+      context: tests/e2e/mocks
+    volumes:
+      - sif-remotes:/remotes
+  portal-api:
+    environment:
+      SIF_ALLOW_PRIVATE_URLS: "true"  # the mocks live on the compose network
+      SIF_DIGEST_HOURS: "0.001"  # a knowledge PR every few seconds instead of daily
+  git-broker:
+    environment:
+      GIT_REMOTE_BASE: file:///remotes
+      GITHUB_API_URL: http://mock-externals:8080
+      GITHUB_TOKEN: unused
+    volumes:
+      - sif-remotes:/remotes
+  jira-connector:
+    environment:
+      JIRA_BASE_URL: http://mock-externals:8080
+      JIRA_EMAIL: bot@example.com
+      JIRA_API_TOKEN: unused
+      SIF_DRY_RUN: "false"
+      SIF_POLL_SECONDS: "2"
+      SIF_CONNECTION_CACHE_SECONDS: "2"  # a team connection saved mid-run is picked up within seconds
+      SIF_NAMESPACE_REFRESH_SECONDS: "2"  # a team namespace created mid-run is served within seconds
+      SIF_WAIT_TIMEOUT_MINUTES: "1"
+      SIF_MAX_RUN_MINUTES: "10"
+      SIF_REVIEW_POLL_SECONDS: "2"  # follow open PRs closely so review rounds and merges show up within seconds
+  orchestrator-worker:
+    environment:
+      SIF_NAMESPACE_REFRESH_SECONDS: "2"
+      SIF_DIGEST_POLL_SECONDS: "2"
+  sandbox-gateway:
+    environment:
+      LLM_UPSTREAM_URL: http://mock-externals:8080
+      LLM_UPSTREAM_KEY: mock-llm-key
+volumes:
+  sif-remotes:

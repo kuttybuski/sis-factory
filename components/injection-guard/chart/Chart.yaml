@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sif-injection-guard
+description: Prompt-injection scanning, spotlighting and outbound checks for untrusted text
+type: application
+version: 0.1.0
